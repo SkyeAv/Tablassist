@@ -10,6 +10,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pylint>=4.0.5",
     "pytest>=9.0.2",
     "ruff>=0.15.6",
 ]
@@ -22,3 +23,6 @@ target-version = "py313"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pylint.master]
+ignore-paths = ["^.*$"]
