@@ -30,4 +30,4 @@ target-version = "py313"
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-magic-trailing-comma = false
+skip-magic-trailing-comma = true
