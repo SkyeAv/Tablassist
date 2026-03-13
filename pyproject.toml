@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=3.1.0",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -32,4 +34,4 @@ indent-string = "  "
 [tool.pylint.design]
 max-line-length = 120
 max-args = 8
-max-attributes = 10 
+max-attributes = 10
