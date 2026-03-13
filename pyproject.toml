@@ -10,6 +10,10 @@ dependencies = [
     "pyyaml>=6.0.3",
 ]
 
+[build-system]
+requires = ["uv>=0.6"]
+build-backend = "uv.build"
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
