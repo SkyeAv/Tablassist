@@ -25,5 +25,11 @@ quote-style = "double"
 indent-style = "space"
 magic-trailing-comma = false
 
-[tool.pylint.master]
-ignore-paths = ["^.*$"]
+[tool.pylint.format]
+max-line-length = 120
+indent-string = "  "
+
+[tool.pylint.design]
+max-line-length = 120
+max-args = 8
+max-attributes = 10 
