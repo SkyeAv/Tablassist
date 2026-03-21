@@ -1,3 +1,9 @@
 # Opencode generated files
 *AGENTS.md
 *plans/
+
+# Ruff Cache
+*.ruff_cache/
+
+# Pytest Cache
+*.pytest_cache/
