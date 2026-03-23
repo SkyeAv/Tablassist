@@ -6,9 +6,11 @@ readme = "./../README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cyclopts>=4.10.1",
+    "httpx>=0.28.1",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
     "tablassert>=7.0.2",
+    "trafilatura>=2.0.0",
 ]
 
 [build-system]
