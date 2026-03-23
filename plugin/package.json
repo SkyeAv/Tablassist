@@ -1,8 +1,7 @@
 {
-  "name": "plugin",
-  "module": "index.ts",
+  "name": "tablassist",
+  "module": "./src/index.ts",
   "type": "module",
-  "private": true,
   "devDependencies": {
     "@types/bun": "latest"
   },

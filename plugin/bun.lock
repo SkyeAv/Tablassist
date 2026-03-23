@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "plugin",
+      "name": "tablassist",
       "devDependencies": {
         "@types/bun": "latest",
       },
