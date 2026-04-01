@@ -555,6 +555,18 @@ wheels = [
 ]
 
 [[package]]
+name = "lazy-loader"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/ac/21a1f8aa3777f5658576777ea76bfb124b702c520bbe90edf4ae9915eafa/lazy_loader-0.5.tar.gz", hash = "sha256:717f9179a0dbed357012ddad50a5ad3d5e4d9a0b8712680d4e687f5e6e6ed9b3", size = 15294, upload-time = "2026-03-06T15:45:09.054Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/a1/8d812e53a5da1687abb10445275d41a8b13adb781bbf7196ddbcf8d88505/lazy_loader-0.5-py3-none-any.whl", hash = "sha256:ab0ea149e9c554d4ffeeb21105ac60bed7f3b4fd69b1d2360a4add51b170b005", size = 8044, upload-time = "2026-03-06T15:45:07.668Z" },
+]
+
+[[package]]
 name = "lml"
 version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1906,12 +1918,13 @@ wheels = [
 
 [[package]]
 name = "tablassert"
-version = "7.0.2"
+version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "diskcache" },
     { name = "duckdb" },
     { name = "fastexcel" },
+    { name = "lazy-loader" },
     { name = "loguru" },
     { name = "mkdocs" },
     { name = "onnxruntime" },
@@ -1930,9 +1943,9 @@ dependencies = [
     { name = "typer" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/af/d701e992d0c16f9b00e99e07cda9b561e6fccad0c18b642a49e327524737/tablassert-7.0.2.tar.gz", hash = "sha256:f26bc3c4394faea9d7bbf375a6dfe0ff31b624e2f38cabcb48bcb475cbaf92f4", size = 140630, upload-time = "2026-03-23T20:24:44.654Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/14/e7/78d0aabe7bd384f06ab067d08412c669f1bad999523ec2bd226be4452eb9/tablassert-7.1.0.tar.gz", hash = "sha256:e49c4954c398452fe92b98b1bfd26961a23e1800737294af9cc8e1fb3b96d7fa", size = 141213, upload-time = "2026-03-26T03:15:05.894Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/12/86ae3b3ca20b9e04d1a50228209112c400935e97adfa5f168b387396e479/tablassert-7.0.2-py3-none-any.whl", hash = "sha256:704541ea90d2b2fb002bdce09158ad2ece3d0f8d56cd92e92a1a7e2d44577480", size = 28125, upload-time = "2026-03-23T20:24:42.301Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/b7/ae722876441e62e89b073408ff042bf80464d2c25ab2c7b920cf7a7a8e62/tablassert-7.1.0-py3-none-any.whl", hash = "sha256:c15a8945ac3351b47d45cb06cc29cf7d309c68856b099fe9e27ed113c67fc527", size = 28679, upload-time = "2026-03-26T03:15:04.333Z" },
 ]
 
 [[package]]
