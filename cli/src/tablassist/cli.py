@@ -6,8 +6,11 @@ from typing import Any, Optional, Union
 
 import httpx
 import textract
+import yaml
 from cyclopts import App
+from pydantic import ValidationError
 from tablassert.enums import Categories, Predicates, Qualifiers
+from tablassert.ingests import from_yaml, to_sections
 from tablassert.models import Section
 
 from tablassist.utils import get_biolink_html_documentation, get_json_response, get_static_content
@@ -138,6 +141,30 @@ def get_supported_biolink_qualifiers() -> list[str]:
 @CLI.command
 def get_section_pydantic_schema_as_json() -> str:
     return Section.model_json_schema()
+
+
+@CLI.command
+def validate_full_yaml_table_configuration(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
+    try:
+        raw: Any = from_yaml(yaml_file)
+    except yaml.scanner.ScannerError as e:  # pyright: ignore
+        return {"error": f"YAML Syntax error at line {e.problem_mark.line + 1}: {e.problem}"}
+    except yaml.parser.ParserError as e:  # pyright: ignore
+        return {"error": f"YAML Parser error: {e}"}
+    except yaml.YAMLError as e:
+        return {"error": f"YAML error: {e}"}
+
+    sections: list[dict[str, Any]] = to_sections(raw)
+
+    errors: list[dict[str, Any]] = []
+    for idx, s in enumerate(sections, start=1):
+        try:
+            Section.model_validate(s)
+            errors += [{"section-number": idx, "section": s, "status": "ok"}]
+        except ValidationError as e:
+            errors += [{"section-number": idx, "section": s, "error": f"{e}"}]
+
+    return errors
 
 
 @CLI.command
