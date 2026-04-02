@@ -1417,6 +1417,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b4/db/08f4ca10c5018813e7e0b59e4472302328b3d2ab1512f5a2157a814540e0/polars-1.39.3-py3-none-any.whl", hash = "sha256:c2b955ccc0a08a2bc9259785decf3d5c007b489b523bf2390cf21cec2bb82a56", size = 823985, upload-time = "2026-03-20T11:14:23.619Z" },
 ]
 
+[package.optional-dependencies]
+rtcompat = [
+    { name = "polars-runtime-compat" },
+]
+
 [[package]]
 name = "polars-hash"
 version = "0.5.6"
@@ -1451,6 +1456,22 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/7a/3e/c86433c3b5ec0315bdfc7640d0c15d41f1216c0103a0eab9a9b5147d6c4c/polars_runtime_32-1.39.3-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:7c206bdcc7bc62ea038d6adea8e44b02f0e675e0191a54c810703b4895208ea4", size = 46485933, upload-time = "2026-03-20T11:14:51.155Z" },
     { url = "https://files.pythonhosted.org/packages/54/ce/200b310cf91f98e652eb6ea09fdb3a9718aa0293ebf113dce325797c8572/polars_runtime_32-1.39.3-cp310-abi3-win_amd64.whl", hash = "sha256:d66ca522517554a883446957539c40dc7b75eb0c2220357fb28bc8940d305339", size = 46995458, upload-time = "2026-03-20T11:14:56.074Z" },
     { url = "https://files.pythonhosted.org/packages/da/76/2d48927e0aa2abbdde08cbf4a2536883b73277d47fbeca95e952de86df34/polars_runtime_32-1.39.3-cp310-abi3-win_arm64.whl", hash = "sha256:f49f51461de63f13e5dd4eb080421c8f23f856945f3f8bd5b2b1f59da52c2860", size = 41857648, upload-time = "2026-03-20T11:15:01.142Z" },
+]
+
+[[package]]
+name = "polars-runtime-compat"
+version = "1.39.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e9/47/68e3ce0628259649884f2fe6ecbc7c892d5d0b1c7aaea4b5bcef5b365058/polars_runtime_compat-1.39.3.tar.gz", hash = "sha256:8fc1f40f44d9f3c4b9da86469e25636dd28ac212250eaf5da2c13613612277cc", size = 2873553, upload-time = "2026-03-20T11:16:31.56Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/e2/c57467db3149303306f78cecbbdb6bbf786c9369034087adf3a7717a54ec/polars_runtime_compat-1.39.3-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:69cab86e18fdbc8f5a64cfd3042cf57b03ac47062a925b0d1f99971786661da5", size = 44986216, upload-time = "2026-03-20T11:15:48.364Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/64/b9451dc70988d1a95967e5f4cd9dc6c2a25f2f10aaf4b941e1cbb2336438/polars_runtime_compat-1.39.3-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:41e0a36e9c0ec1db6c5bb48a2408f2e992cacebcc4912556fa336e4b721c7efb", size = 40701182, upload-time = "2026-03-20T11:15:53.018Z" },
+    { url = "https://files.pythonhosted.org/packages/05/60/73d64d227eecb145edf6ea20fa33d7351945453975d74656ef49cba171a8/polars_runtime_compat-1.39.3-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3377d57e586c3bcf0b6293ce626aa05890285957451efb539a8a997f11918ece", size = 43112931, upload-time = "2026-03-20T11:15:57.538Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/d2/d518d0dfd4096bb007b28632682dc7677d95b92f3854a3f269d1c9fe8baa/polars_runtime_compat-1.39.3-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1e54d6acda9db5653ffd7fc5923a56082be65de20e41e4d33b6068efd67ecb85", size = 46617020, upload-time = "2026-03-20T11:16:02.732Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/89/fcbc46717a30ed18632bc37d9deb3ca564568356127b7e321dbb18bad974/polars_runtime_compat-1.39.3-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:54d185a47c317be09e45d0bf9d35dcf7ef2f817624fe72fe963efe07295b73ee", size = 43275417, upload-time = "2026-03-20T11:16:07.419Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/09/d6c8b83ae21189b506515251f927aa9435a54555daf4f5799dc98197a9a3/polars_runtime_compat-1.39.3-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:3f164478766306fdd353633a5964b25ac6520752003426a1b872fe7b972314a8", size = 46235057, upload-time = "2026-03-20T11:16:12.029Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/72/48e5111e5db02230f8baafc8ab72f8aa777298be7f9ae5a7c10c39745200/polars_runtime_compat-1.39.3-cp310-abi3-win_amd64.whl", hash = "sha256:9dfebd1c8af0329d2bf2047c9af8fd1d28f99660f53f060e9a7a13fbe8e66dc1", size = 46814551, upload-time = "2026-03-20T11:16:16.958Z" },
+    { url = "https://files.pythonhosted.org/packages/ab/12/3b20cedf9636470cd3267837334b00fe7dacaa804ec1baf44a744a60dc88/polars_runtime_compat-1.39.3-cp310-abi3-win_arm64.whl", hash = "sha256:0c50da78e656dcc6164e6eb43d0406750153a382c6fdccdd932368534fb6108c", size = 41778154, upload-time = "2026-03-20T11:16:21.862Z" },
 ]
 
 [[package]]
@@ -2204,18 +2225,33 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/72/04/d958f11be0a568e09fb4dea7c43ab64878b3ab462e4e10b4c339537d8e1b/tablassert-7.2.1-py3-none-any.whl", hash = "sha256:a9f901db73c0274bce08327338d23d532eacd60a2cad96501fa27d522d6f2efa", size = 31669, upload-time = "2026-04-02T03:46:38.213Z" },
 ]
 
+[package.optional-dependencies]
+rtcompat = [
+    { name = "polars", extra = ["rtcompat"] },
+]
+
 [[package]]
 name = "tablassist"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "cyclopts" },
+    { name = "fastexcel" },
     { name = "httpx" },
+    { name = "polars" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "tablassert" },
     { name = "textract" },
     { name = "trafilatura" },
+]
+
+[package.optional-dependencies]
+rt = [
+    { name = "tablassert", extra = ["rtcompat"] },
+]
+rtcompat = [
+    { name = "polars", extra = ["rtcompat"] },
 ]
 
 [package.dev-dependencies]
@@ -2229,13 +2265,18 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cyclopts", specifier = ">=4.10.1" },
+    { name = "fastexcel", specifier = ">=0.19.0" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "polars", specifier = ">=1.39.3" },
+    { name = "polars", extras = ["rtcompat"], marker = "extra == 'rtcompat'", specifier = ">=1.39.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "tablassert", specifier = ">=7.2.1" },
+    { name = "tablassert", extras = ["rtcompat"], marker = "extra == 'rt'" },
     { name = "textract", specifier = ">=1.6.5" },
     { name = "trafilatura", specifier = ">=2.0.0" },
 ]
+provides-extras = ["rtcompat", "rt"]
 
 [package.metadata.requires-dev]
 dev = [

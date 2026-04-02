@@ -6,7 +6,9 @@ readme = "./../README.md"
 requires-python = ">=3.13"
 dependencies = [
     "cyclopts>=4.10.1",
+    "fastexcel>=0.19.0",
     "httpx>=0.28.1",
+    "polars>=1.39.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
     "tablassert>=7.2.1",
@@ -23,6 +25,14 @@ packages = ["./src/tablassist"]
 
 [project.scripts]
 tablassist = "tablassist.cli:serve"
+
+[project.optional-dependencies]
+rtcompat = [
+    "polars[rtcompat]>=1.39.0",
+]
+rt = [
+    "tablassert[rtcompat]",
+]
 
 [dependency-groups]
 dev = [

@@ -4,7 +4,9 @@ import subprocess
 from pathlib import Path
 from typing import Any, Optional, Union
 
+import fastexcel
 import httpx
+import polars as pl
 import textract
 import yaml
 from cyclopts import App
@@ -217,6 +219,19 @@ def extract_text_from_diverse_file_types_with_textract(file: Path, extension: Op
         return textract.process(file, extension=extension)
     else:
         return textract.process(file)
+
+
+@CLI.command
+def get_excel_sheet_names_from_spreadsheet(file: Path) -> list[str]:
+    wb: Any = fastexcel.read_excel(file)
+    return wb.sheet_names
+
+
+@CLI.command
+def preview_sheet_in_excel_spreadsheet(file: Path, sheet_name: str, n_rows: str, engine="calamine") -> dict[str, Any]:
+    df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
+    df = df.head(n_rows)
+    return df.to_dict(series=False)
 
 
 def serve() -> None:
