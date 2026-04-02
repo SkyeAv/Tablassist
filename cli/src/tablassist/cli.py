@@ -1,6 +1,7 @@
 import os
 import random
 import re
+import subprocess
 from pathlib import Path
 from typing import Any, Union
 
@@ -66,8 +67,9 @@ def get_cannonical_curie_information_from_curie(curie: str) -> Union[list[Any], 
 
 
 @CLI.command
-def download_pmc_tarbell_if_available(pmc_id: int, dest: Path = Path(".")) -> dict[str, Any]:
+def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
     url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
+
     params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": f"{pmc_id}"}
 
     with httpx.stream("GET", url, params=params) as r:
@@ -79,12 +81,15 @@ def download_pmc_tarbell_if_available(pmc_id: int, dest: Path = Path(".")) -> di
         matches: object = re.search(r"filename=(.+)", d)
 
         filename: str = matches.group(1) if matches else "download.tar.xz"
-        p: Path = dest / filename
+        p: Path = dest_dir / filename
         with p.open("wb") as f:
             for chunk in r.iter_bytes():
                 f.write(chunk)
 
-    return {"status": "ok", "output": f"{p}"}
+    cmd: list[str] = ["tar", "-xvf", f"{p}", "&&", "ls", "-lh", f"{dest_dir}"]
+    r: Any = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+    return {"status": "ok", "stdout": f"{r.stdout}", "stderr": f"{r.stderr}"}
 
 
 @CLI.command
