@@ -7,6 +7,7 @@ from typing import Any, Union
 import httpx
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
+from tablassert.models import Section
 
 from tablassist.utils import get_biolink_html_documentation, get_json_response, get_static_content
 
@@ -112,6 +113,11 @@ def get_supported_biolink_predicates() -> list[str]:
 @CLI.command
 def get_supported_biolink_qualifiers() -> list[str]:
     return [x.value for x in Qualifiers]
+
+
+@CLI.command
+def get_section_pydantic_schema_as_json() -> str:
+    return Section.model_json_schema()
 
 
 @CLI.command
