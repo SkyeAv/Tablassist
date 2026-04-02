@@ -107,6 +107,18 @@ def search_for_gene_curies_in_taxon_with_term(term: str, ncbi_taxon: int = 9606)
 
 
 @CLI.command
+def get_ncbi_taxon_id_from_organism_name(organism_name: str) -> Union[list[Any], dict[str, Any]]:
+    url: str = "https://hypatia.systemsbiology.net/get-ncbi-taxon-id-from-organism-name"
+    params: dict[str, Any] = {
+        "username": TABLASSIST_USERNAME,
+        "api-key": TABLASSIST_API_KEY,
+        "organism-name": organism_name,
+    }
+
+    return get_json_response(url, params)
+
+
+@CLI.command
 def get_supported_biolink_categories() -> list[str]:
     return [x.value for x in Categories]
 
