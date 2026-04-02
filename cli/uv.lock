@@ -304,15 +304,6 @@ wheels = [
 ]
 
 [[package]]
-name = "diskcache"
-version = "5.6.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3f/21/1c1ffc1a039ddcc459db43cc108658f32c57d271d7289a2794e401d0fdb6/diskcache-5.6.3.tar.gz", hash = "sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc", size = 67916, upload-time = "2023-08-31T06:12:00.316Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/27/4570e78fc0bf5ea0ca45eb1de3818a23787af9b390c0b0a0033a1b8236f9/diskcache-5.6.3-py3-none-any.whl", hash = "sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19", size = 45550, upload-time = "2023-08-31T06:11:58.822Z" },
-]
-
-[[package]]
 name = "docstring-parser"
 version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1427,6 +1418,26 @@ wheels = [
 ]
 
 [[package]]
+name = "polars-hash"
+version = "0.5.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "polars" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d2/65/1363800e877a6839398628879fcaef8623fab8abedd0e2e2eb4657282550/polars_hash-0.5.6.tar.gz", hash = "sha256:c0e5c02e839dac8d4c514fb3a053f2dc33749bd5ed1cb5387c1ef34972492e38", size = 28154, upload-time = "2026-01-09T10:47:25.572Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2d/96/7aad5784ea758dfcac1e89aeb87a9ebc81ee939a8a79f59b8d41f392ff1a/polars_hash-0.5.6-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:92d5d7192e1b877287efd73abdf6df080f562fa3b758fae49f0cd1bcaee8817f", size = 4230486, upload-time = "2026-01-09T10:47:08.362Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/0c/bf1db13c707956be8acdcc56ca7440d8f0706d80f9a2a56fbedf598dc3d9/polars_hash-0.5.6-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:2c70d9f1ffdabd610aeafad965fbf753fc526c84a0153e00987ee872a4d10c30", size = 4011494, upload-time = "2026-01-09T10:47:10.448Z" },
+    { url = "https://files.pythonhosted.org/packages/28/d1/ab5e0242ec78965f9c767c6b453d2972c799125fb5aba0714cf90a58c077/polars_hash-0.5.6-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c772db0140f34ca068b01116d430caf994ef23917c31b44db68c511f208a72a7", size = 4845209, upload-time = "2026-01-09T10:47:12.133Z" },
+    { url = "https://files.pythonhosted.org/packages/19/3b/65d234b23251fcce5bb8e3c48764fbb017d5627b20dce401e8b20009b9a6/polars_hash-0.5.6-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:aef82274bfd05b4dbca740a2a7db13d5ce9aeb678c3ffd593d61a8a3f8a2cdf8", size = 4973914, upload-time = "2026-01-09T10:47:13.809Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/74/ceca8f33fd8b4da203ad989c1d8dff36459a0c6c50c0cdee335a19380a74/polars_hash-0.5.6-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a63fbfe49f14a8fb966db00162eab7067e270d9fbc8261c4e4109c752aea9f8a", size = 5519486, upload-time = "2026-01-09T10:47:15.805Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/75/537a7cf9bf067db271c89c5033d63445aa3a99d885ee801f77c28f2e87d2/polars_hash-0.5.6-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d612bb3f7c18bbb525d489c21fe803e89253c41fe7a8a5c08231e81ecff771f5", size = 5631602, upload-time = "2026-01-09T10:47:18.115Z" },
+    { url = "https://files.pythonhosted.org/packages/74/0c/ceee8533b4e8b1df61a65453d0454be99954262e8678a6a726d1860f61c4/polars_hash-0.5.6-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0c7980c07510e39414b6a54de5241cca18a919c0d23fee24de76b044ef17af1a", size = 4897827, upload-time = "2026-01-09T10:47:20.336Z" },
+    { url = "https://files.pythonhosted.org/packages/94/74/3b49440046260b34f1d91e779bf64aefe673401e30b7ec648f94eb90c82b/polars_hash-0.5.6-cp38-abi3-win32.whl", hash = "sha256:004db887b202f2e9e0bc22d3b5bf0b8d3a6cc5caaa38858c564d95dc9e9ff985", size = 3653821, upload-time = "2026-01-09T10:47:22.066Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/58/94016e8e61f210175146e25e40a6ea8a498e94eeaa4214e5f4cb1d8458fa/polars_hash-0.5.6-cp38-abi3-win_amd64.whl", hash = "sha256:5f745a52054779cc1c03950a905dc7fc971698b6111e3e83e24d4edf502d9e6c", size = 4187808, upload-time = "2026-01-09T10:47:24.176Z" },
+]
+
+[[package]]
 name = "polars-runtime-32"
 version = "1.39.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2164,20 +2175,19 @@ wheels = [
 
 [[package]]
 name = "tablassert"
-version = "7.1.0"
+version = "7.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "diskcache" },
     { name = "duckdb" },
     { name = "fastexcel" },
     { name = "lazy-loader" },
     { name = "loguru" },
-    { name = "mkdocs" },
     { name = "onnxruntime" },
     { name = "optimum-onnx" },
     { name = "orjson" },
     { name = "playwright" },
     { name = "polars" },
+    { name = "polars-hash" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pyexcel" },
@@ -2189,9 +2199,9 @@ dependencies = [
     { name = "typer" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/14/e7/78d0aabe7bd384f06ab067d08412c669f1bad999523ec2bd226be4452eb9/tablassert-7.1.0.tar.gz", hash = "sha256:e49c4954c398452fe92b98b1bfd26961a23e1800737294af9cc8e1fb3b96d7fa", size = 141213, upload-time = "2026-03-26T03:15:05.894Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/24/99b14976759e8ecaf970f1a42921eb6270d0740ef15cb119bd3f596ebff6/tablassert-7.2.1.tar.gz", hash = "sha256:9a8f3898ff95139449ad6e38f8258162f67bd3bc4ec05e2b27ddffcbaf22feee", size = 208326, upload-time = "2026-04-02T03:46:39.76Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/b7/ae722876441e62e89b073408ff042bf80464d2c25ab2c7b920cf7a7a8e62/tablassert-7.1.0-py3-none-any.whl", hash = "sha256:c15a8945ac3351b47d45cb06cc29cf7d309c68856b099fe9e27ed113c67fc527", size = 28679, upload-time = "2026-03-26T03:15:04.333Z" },
+    { url = "https://files.pythonhosted.org/packages/72/04/d958f11be0a568e09fb4dea7c43ab64878b3ab462e4e10b4c339537d8e1b/tablassert-7.2.1-py3-none-any.whl", hash = "sha256:a9f901db73c0274bce08327338d23d532eacd60a2cad96501fa27d522d6f2efa", size = 31669, upload-time = "2026-04-02T03:46:38.213Z" },
 ]
 
 [[package]]
@@ -2222,7 +2232,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "tablassert", specifier = ">=7.1.0" },
+    { name = "tablassert", specifier = ">=7.2.1" },
     { name = "textract", specifier = ">=1.6.5" },
     { name = "trafilatura", specifier = ">=2.0.0" },
 ]

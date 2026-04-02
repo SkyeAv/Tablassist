@@ -9,7 +9,7 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
-    "tablassert>=7.1.0",
+    "tablassert>=7.2.1",
     "textract>=1.6.5",
     "trafilatura>=2.0.0",
 ]
