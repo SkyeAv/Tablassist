@@ -8,12 +8,17 @@ import httpx
 import textract
 import yaml
 from cyclopts import App
-from pydantic import ValidationError
 from tablassert.enums import Categories, Predicates, Qualifiers
 from tablassert.ingests import from_yaml, to_sections
 from tablassert.models import Section
 
-from tablassist.utils import get_biolink_html_documentation, get_json_response, get_static_content
+from tablassist.utils import (
+    get_biolink_html_documentation,
+    get_json_response,
+    get_static_content,
+    parse_yaml_string,
+    validate_section,
+)
 
 CLI: App = App()
 
@@ -144,7 +149,33 @@ def get_section_pydantic_schema_as_json() -> str:
 
 
 @CLI.command
-def validate_full_yaml_table_configuration(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
+def validate_single_yaml_table_configuration_section_from_yaml_string(yaml_string: str) -> dict[str, Any]:
+    raw: Any = parse_yaml_string(yaml_string)
+    if isinstance(raw, dict) and "error" in raw:
+        return raw
+
+    return validate_section(raw)
+
+
+@CLI.command
+def validate_full_yaml_table_configuration_from_yaml_string(
+    yaml_string: str,
+) -> Union[dict[str, Any], list[dict[str, Any]]]:
+    raw: Any = parse_yaml_string(yaml_string)
+    if isinstance(raw, dict) and "error" in raw:
+        return raw
+
+    sections: list[dict[str, Any]] = to_sections(raw)
+
+    errors: list[dict[str, Any]] = []
+    for s in sections:
+        errors += [validate_section(s)]
+
+    return errors
+
+
+@CLI.command
+def validate_full_yaml_table_configuration_from_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
     try:
         raw: Any = from_yaml(yaml_file)
     except yaml.scanner.ScannerError as e:  # pyright: ignore
@@ -157,12 +188,8 @@ def validate_full_yaml_table_configuration(yaml_file: Path) -> Union[dict[str, A
     sections: list[dict[str, Any]] = to_sections(raw)
 
     errors: list[dict[str, Any]] = []
-    for idx, s in enumerate(sections, start=1):
-        try:
-            Section.model_validate(s)
-            errors += [{"section-number": idx, "section": s, "status": "ok"}]
-        except ValidationError as e:
-            errors += [{"section-number": idx, "section": s, "error": f"{e}"}]
+    for s in sections:
+        errors += [validate_section(s)]
 
     return errors
 
