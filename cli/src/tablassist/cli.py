@@ -228,7 +228,7 @@ def get_excel_sheet_names_from_spreadsheet(file: Path) -> list[str]:
 
 
 @CLI.command
-def preview_sheet_in_excel_spreadsheet(file: Path, sheet_name: str, n_rows: str, engine="calamine") -> dict[str, Any]:
+def preview_sheet_in_excel_spreadsheet(file: Path, sheet_name: str, n_rows: int, engine="calamine") -> dict[str, Any]:
     df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
     df = df.head(n_rows)
     return df.to_dict(series=False)
