@@ -53,7 +53,7 @@ TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
 @CLI.command
 def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
     url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-curies"
-    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
+    params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
 
     return get_json_response(url, params)
 
@@ -61,7 +61,7 @@ def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
 @CLI.command
 def get_cannonical_curie_information_from_curie(curie: str) -> Union[list[Any], dict[str, Any]]:
     url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
-    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "curie": curie}
+    params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "curie": curie}
 
     return get_json_response(url, params)
 
@@ -70,7 +70,7 @@ def get_cannonical_curie_information_from_curie(curie: str) -> Union[list[Any], 
 def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
     url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
 
-    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": f"{pmc_id}"}
+    params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
     with httpx.stream("GET", url, params=params) as r:
         if r.status_code == 404:
@@ -95,11 +95,11 @@ def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) ->
 @CLI.command
 def search_for_gene_curies_in_taxon_with_term(term: str, ncbi_taxon: int = 9606) -> Union[list[Any], dict[str, Any]]:
     url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-gene-curies-in-ncbi-taxon"
-    params: dict[str, str] = {
+    params: dict[str, Any] = {
         "username": TABLASSIST_USERNAME,
         "api-key": TABLASSIST_API_KEY,
         "term": term,
-        "taxon": f"{ncbi_taxon}",
+        "taxon": ncbi_taxon,
     }
 
     return get_json_response(url, params)
