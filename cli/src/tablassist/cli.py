@@ -1,9 +1,11 @@
+import os
 import random
+from typing import Any, Union
 
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
 
-from tablassist.utils import get_static_content
+from tablassist.utils import get_json_response, get_static_content
 
 CLI: App = App()
 
@@ -37,6 +39,31 @@ def get_random_production_table_configuration_example() -> str:
     ]
     url: str = urls[random.randint(0, 4)]
     return get_static_content(url)
+
+
+TABLASSIST_USERNAME: str = os.environ.get("TABLASSIST_USERNAME", "")
+TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
+
+
+@CLI.commmand
+def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
+    url: str = "https//hypatia.systemsbiology.net/configurator-api/search-for-curies"
+    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
+
+    return get_json_response(url, params)
+
+
+@CLI.command
+def search_for_gene_curies_in_taxon_with_term(term: str, ncbi_taxon: int = 9606) -> Union[list[Any], dict[str, Any]]:
+    url: str = "https//hypatia.systemsbiology.net/configurator-api/search-for-gene-curies-in-ncbi-taxon"
+    params: dict[str, str] = {
+        "username": TABLASSIST_USERNAME,
+        "api-key": TABLASSIST_API_KEY,
+        "term": term,
+        "taxon": f"{ncbi_taxon}",
+    }
+
+    return get_json_response(url, params)
 
 
 @CLI.command
