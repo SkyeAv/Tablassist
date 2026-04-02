@@ -8,7 +8,7 @@ import httpx
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
 
-from tablassist.utils import get_json_response, get_static_content
+from tablassist.utils import get_biolink_html_documentation, get_json_response, get_static_content
 
 CLI: App = App()
 
@@ -48,7 +48,7 @@ TABLASSIST_USERNAME: str = os.environ.get("TABLASSIST_USERNAME", "")
 TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
 
 
-@CLI.commmand
+@CLI.command
 def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
     url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-curies"
     params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
@@ -112,6 +112,21 @@ def get_supported_biolink_predicates() -> list[str]:
 @CLI.command
 def get_supported_biolink_qualifiers() -> list[str]:
     return [x.value for x in Qualifiers]
+
+
+@CLI.command
+def get_specific_biolink_category_documentation(catergory: str) -> str:
+    return get_biolink_html_documentation(catergory) or f"ERROR | {catergory} is not a supported biolink catergory"
+
+
+@CLI.command
+def get_specific_biolink_predicate_documentation(predicate: str) -> str:
+    return get_biolink_html_documentation(predicate) or f"ERROR | {predicate} is not a supported biolink predicate"
+
+
+@CLI.command
+def get_specific_biolink_qualifier_documentation(qualifier: str) -> str:
+    return get_biolink_html_documentation(qualifier) or f"ERROR | {qualifier} is not a supported biolink qualifier"
 
 
 def serve() -> None:
