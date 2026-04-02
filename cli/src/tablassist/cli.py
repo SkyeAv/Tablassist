@@ -234,5 +234,11 @@ def preview_sheet_in_excel_spreadsheet(file: Path, sheet_name: str, n_rows: int,
     return df.to_dict(series=False)
 
 
+@CLI.command
+def preview_tabular_file_contents(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]:
+    df: pl.DataFrame = pl.read_csv(source=file, n_rows=n_rows, separator=separator)
+    return df.to_dict(series=False)
+
+
 def serve() -> None:
     CLI()
