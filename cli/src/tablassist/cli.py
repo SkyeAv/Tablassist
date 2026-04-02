@@ -89,7 +89,7 @@ def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) ->
     cmd: list[str] = ["tar", "-xvf", f"{p}", "&&", "ls", "-lh", f"{dest_dir}"]
     r: Any = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-    return {"status": "ok", "stdout": f"{r.stdout}", "stderr": f"{r.stderr}"}
+    return {"status": "ok", "stdout": r.stdout, "stderr": r.stderr}
 
 
 @CLI.command
