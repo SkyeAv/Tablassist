@@ -3,9 +3,10 @@ import random
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import httpx
+import textract
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
 from tablassert.models import Section
@@ -138,6 +139,16 @@ def get_specific_biolink_predicate_documentation(predicate: str) -> str:
 @CLI.command
 def get_specific_biolink_qualifier_documentation(qualifier: str) -> str:
     return get_biolink_html_documentation(qualifier) or f"ERROR | {qualifier} is not a supported biolink qualifier"
+
+
+@CLI.command
+def extract_text_from_diverse_file_types_with_textract(file: Path, extension: Optional[str] = None) -> str:
+    if file.suffix == "pdf":
+        return textract.process(file, method="pdfminer")
+    elif extension:
+        return textract.process(file, extension=extension)
+    else:
+        return textract.process(file)
 
 
 def serve() -> None:
