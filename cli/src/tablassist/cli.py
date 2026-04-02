@@ -1,7 +1,10 @@
 import os
 import random
+import re
+from pathlib import Path
 from typing import Any, Union
 
+import httpx
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
 
@@ -47,15 +50,45 @@ TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
 
 @CLI.commmand
 def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
-    url: str = "https//hypatia.systemsbiology.net/configurator-api/search-for-curies"
+    url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-curies"
     params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
 
     return get_json_response(url, params)
 
 
 @CLI.command
+def get_cannonical_curie_information_from_curie(curie: str) -> Union[list[Any], dict[str, Any]]:
+    url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
+    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "curie": curie}
+
+    return get_json_response(url, params)
+
+
+@CLI.command
+def download_pmc_tarbell_if_available(pmc_id: int, dest: Path = Path(".")) -> dict[str, Any]:
+    url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
+    params: dict[str, str] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": f"{pmc_id}"}
+
+    with httpx.stream("GET", url, params=params) as r:
+        if r.status_code == 404:
+            error: dict[str, Any] = r.json()
+            return error
+
+        d: str = r.headers["content-disposition"]
+        matches: object = re.search(r"filename=(.+)", d)
+
+        filename: str = matches.group(1) if matches else "download.tar.xz"
+        p: Path = dest / filename
+        with p.open("wb") as f:
+            for chunk in r.iter_bytes():
+                f.write(chunk)
+
+    return {"status": "ok", "output": f"{p}"}
+
+
+@CLI.command
 def search_for_gene_curies_in_taxon_with_term(term: str, ncbi_taxon: int = 9606) -> Union[list[Any], dict[str, Any]]:
-    url: str = "https//hypatia.systemsbiology.net/configurator-api/search-for-gene-curies-in-ncbi-taxon"
+    url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-gene-curies-in-ncbi-taxon"
     params: dict[str, str] = {
         "username": TABLASSIST_USERNAME,
         "api-key": TABLASSIST_API_KEY,
