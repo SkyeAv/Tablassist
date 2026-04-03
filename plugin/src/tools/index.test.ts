@@ -1,12 +1,10 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test"
 
-import { createAllTools } from "./index.ts";
+import { createAllTools } from "./index.ts"
 
 describe("createAllTools", () => {
   it("registers the full expected tool set", () => {
-    const tools = createAllTools(
-      async (command, args) => `${command}:${args.join(",")}`,
-    );
+    const tools = createAllTools(async (command, args) => `${command}:${args.join(",")}`)
 
     expect(Object.keys(tools).sort()).toEqual([
       "docs-category",
@@ -28,6 +26,6 @@ describe("createAllTools", () => {
       "validate-config-file",
       "validate-config-str",
       "validate-section-str",
-    ]);
-  });
-});
+    ])
+  })
+})

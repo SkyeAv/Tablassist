@@ -1,9 +1,9 @@
-import { tool } from "@opencode-ai/plugin";
+import { tool } from "@opencode-ai/plugin"
 
-import type { CliRunner } from "../cli.ts";
-import { createCliTool } from "./shared.ts";
+import type { CliRunner } from "../cli.ts"
+import { createCliTool } from "./shared.ts"
 
-const z = tool.schema;
+const z = tool.schema
 
 export function createFileTools(cli: CliRunner) {
   return {
@@ -11,15 +11,10 @@ export function createFileTools(cli: CliRunner) {
       "Extract text from PDF, DOCX, and similar files",
       { file: z.string(), extension: z.string().optional() },
       (args: { file: string; extension?: string }) =>
-        cli("extract-text", [
-          args.file,
-          ...(args.extension ? [args.extension] : []),
-        ]),
+        cli("extract-text", [args.file, ...(args.extension ? [args.extension] : [])]),
     ),
-    "excel-sheets": createCliTool(
-      "List sheet names in an Excel file",
-      { file: z.string() },
-      (args: { file: string }) => cli("excel-sheets", [args.file]),
+    "excel-sheets": createCliTool("List sheet names in an Excel file", { file: z.string() }, (args: { file: string }) =>
+      cli("excel-sheets", [args.file]),
     ),
     "preview-excel": createCliTool(
       "Preview the first N rows of an Excel sheet as JSON",
@@ -39,11 +34,7 @@ export function createFileTools(cli: CliRunner) {
         separator: z.string().optional(),
       },
       (args: { file: string; n_rows: number; separator?: string }) =>
-        cli("preview-csv", [
-          args.file,
-          String(args.n_rows),
-          ...(args.separator ? [args.separator] : []),
-        ]),
+        cli("preview-csv", [args.file, String(args.n_rows), ...(args.separator ? [args.separator] : [])]),
     ),
-  };
+  }
 }

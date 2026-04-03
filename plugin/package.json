@@ -32,10 +32,13 @@
     "README.md"
   ],
   "scripts": {
+    "lint": "biome check --write src",
+    "format": "biome format --write src",
     "test": "bun test",
     "typecheck": "bun x tsc --noEmit"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest"
   },
   "peerDependencies": {
