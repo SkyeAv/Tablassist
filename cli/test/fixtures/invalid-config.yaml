@@ -1,0 +1,10 @@
+source:
+  kind: text
+  local: fixtures/preview.csv
+  url: https://example.com/preview.csv
+statement:
+  subject:
+    encoding: A
+    method: column
+  object:
+    encoding: Gene

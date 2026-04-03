@@ -1,0 +1,15 @@
+source:
+  kind: text
+  local: fixtures/preview.csv
+  url: https://example.com/preview.csv
+statement:
+  subject:
+    encoding: A
+    method: column
+  object:
+    encoding: Gene
+provenance:
+  publication: PMC1234567
+  contributors:
+    - name: Example Curator
+      date: "2026-04-02"
