@@ -26,25 +26,29 @@ CLI: App = App()
 
 
 @CLI.command
-def get_table_configuration_documentation() -> str:
+def docs_table_config() -> str:
+    """Fetch Tablassert table configuration spec documentation."""
     url: str = "https://raw.githubusercontent.com/SkyeAv/Tablassert/main/docs/configuration/table.md"
     return get_static_content(url)
 
 
 @CLI.command
-def get_advanced_table_configuration_examples_documentation() -> str:
+def docs_advanced_examples() -> str:
+    """Fetch advanced table configuration examples documentation."""
     url: str = "https://raw.githubusercontent.com/SkyeAv/Tablassert/main/docs/configuration/advanced-example.md"
     return get_static_content(url)
 
 
 @CLI.command
-def get_tablassert_cli_tutorial_documentation() -> str:
+def docs_tutorial() -> str:
+    """Fetch Tablassert CLI tutorial documentation."""
     url: str = "https://raw.githubusercontent.com/SkyeAv/Tablassert/blob/main/docs/tutorial.md"
     return get_static_content(url)
 
 
 @CLI.command
-def get_production_table_configuration_example_without_sections() -> str:
+def example_no_sections() -> str:
+    """Fetch a production YAML config example without sections."""
     url: str = (
         "https://raw.githubusercontent.com/glusman-team/MOKGConfiguration/refs/heads/master/TABLE/MBKG/ALAM1.yaml"
     )
@@ -52,7 +56,8 @@ def get_production_table_configuration_example_without_sections() -> str:
 
 
 @CLI.command
-def get_production_table_configuration_example_with_sections() -> str:
+def example_with_sections() -> str:
+    """Fetch a production YAML config example with sections."""
     url: str = (
         "https://raw.githubusercontent.com/glusman-team/MOKGConfiguration/refs/heads/master/TABLE/MBKG/BLANTON1.yaml"
     )
@@ -64,7 +69,8 @@ TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
 
 
 @CLI.command
-def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
+def search_curies(term: str) -> Union[list[Any], dict[str, Any]]:
+    """Search CURIE candidates by term via Configurator API."""
     url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-curies"
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "term": term}
 
@@ -72,16 +78,18 @@ def search_for_curies_with_term(term: str) -> Union[list[Any], dict[str, Any]]:
 
 
 @CLI.command
-def get_cannonical_curie_information_from_curie(curie: str) -> Union[list[Any], dict[str, Any]]:
-    url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
+def get_curie_info(curie: str) -> Union[list[Any], dict[str, Any]]:
+    """Resolve a single canonical CURIE record."""
+    url: str = "https://hypatia.systemsbiology.net/configurator-api/get-canonical-curie-info"
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "curie": curie}
 
     return get_json_response(url, params)
 
 
 @CLI.command
-def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
-    url: str = "https://hypatia.systemsbiology.net/get-canonical-curie-info"
+def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
+    """Download and extract a PMC tar archive by PMC ID."""
+    url: str = "https://hypatia.systemsbiology.net/configurator-api/download-from-pmc-tars"
 
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
@@ -106,21 +114,23 @@ def download_and_extract_pmc_tarbell(pmc_id: int, dest_dir: Path = Path(".")) ->
 
 
 @CLI.command
-def search_for_gene_curies_in_taxon_with_term(term: str, ncbi_taxon: int = 9606) -> Union[list[Any], dict[str, Any]]:
+def search_gene_curies(term: str, ncbi_taxon: int = 9606) -> Union[list[Any], dict[str, Any]]:
+    """Search gene CURIE candidates by term within an NCBI taxon."""
     url: str = "https://hypatia.systemsbiology.net/configurator-api/search-for-gene-curies-in-ncbi-taxon"
     params: dict[str, Any] = {
         "username": TABLASSIST_USERNAME,
         "api-key": TABLASSIST_API_KEY,
         "term": term,
-        "taxon": ncbi_taxon,
+        "ncbi-taxon-id": ncbi_taxon,
     }
 
     return get_json_response(url, params)
 
 
 @CLI.command
-def get_ncbi_taxon_id_from_organism_name(organism_name: str) -> Union[list[Any], dict[str, Any]]:
-    url: str = "https://hypatia.systemsbiology.net/get-ncbi-taxon-id-from-organism-name"
+def resolve_taxon_id(organism_name: str) -> Union[list[Any], dict[str, Any]]:
+    """Resolve an NCBI Taxon ID from an organism name."""
+    url: str = "https://hypatia.systemsbiology.net/configurator-api/get-ncbi-taxon-id-from-organism-name"
     params: dict[str, Any] = {
         "username": TABLASSIST_USERNAME,
         "api-key": TABLASSIST_API_KEY,
@@ -131,27 +141,32 @@ def get_ncbi_taxon_id_from_organism_name(organism_name: str) -> Union[list[Any],
 
 
 @CLI.command
-def get_supported_biolink_categories() -> list[str]:
+def list_categories() -> list[str]:
+    """List all supported Biolink categories."""
     return [x.value for x in Categories]
 
 
 @CLI.command
-def get_supported_biolink_predicates() -> list[str]:
+def list_predicates() -> list[str]:
+    """List all supported Biolink predicates."""
     return [x.value for x in Predicates]
 
 
 @CLI.command
-def get_supported_biolink_qualifiers() -> list[str]:
+def list_qualifiers() -> list[str]:
+    """List all supported Biolink qualifiers."""
     return [x.value for x in Qualifiers]
 
 
 @CLI.command
-def get_section_pydantic_schema_as_json() -> str:
+def section_schema() -> str:
+    """Return the Section Pydantic model as JSON schema."""
     return Section.model_json_schema()
 
 
 @CLI.command
-def validate_single_yaml_table_configuration_section_from_yaml_string(yaml_string: str) -> dict[str, Any]:
+def validate_section_str(yaml_string: str) -> dict[str, Any]:
+    """Validate a single YAML table configuration section from a string."""
     raw: Any = parse_yaml_string(yaml_string)
     if isinstance(raw, dict) and "error" in raw:
         return raw
@@ -160,9 +175,8 @@ def validate_single_yaml_table_configuration_section_from_yaml_string(yaml_strin
 
 
 @CLI.command
-def validate_full_yaml_table_configuration_from_yaml_string(
-    yaml_string: str,
-) -> Union[dict[str, Any], list[dict[str, Any]]]:
+def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str, Any]]]:
+    """Validate a full YAML table configuration from a string."""
     raw: Any = parse_yaml_string(yaml_string)
     if isinstance(raw, dict) and "error" in raw:
         return raw
@@ -177,7 +191,8 @@ def validate_full_yaml_table_configuration_from_yaml_string(
 
 
 @CLI.command
-def validate_full_yaml_table_configuration_from_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
+def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
+    """Validate a full YAML table configuration from a file path."""
     try:
         raw: Any = from_yaml(yaml_file)
     except yaml.scanner.ScannerError as e:  # pyright: ignore
@@ -197,22 +212,26 @@ def validate_full_yaml_table_configuration_from_file(yaml_file: Path) -> Union[d
 
 
 @CLI.command
-def get_specific_biolink_category_documentation(catergory: str) -> str:
-    return get_biolink_html_documentation(catergory) or f"ERROR | {catergory} is not a supported biolink catergory"
+def docs_category(category: str) -> str:
+    """Fetch Biolink documentation for a specific category."""
+    return get_biolink_html_documentation(category) or f"ERROR | {category} is not a supported biolink category"
 
 
 @CLI.command
-def get_specific_biolink_predicate_documentation(predicate: str) -> str:
+def docs_predicate(predicate: str) -> str:
+    """Fetch Biolink documentation for a specific predicate."""
     return get_biolink_html_documentation(predicate) or f"ERROR | {predicate} is not a supported biolink predicate"
 
 
 @CLI.command
-def get_specific_biolink_qualifier_documentation(qualifier: str) -> str:
+def docs_qualifier(qualifier: str) -> str:
+    """Fetch Biolink documentation for a specific qualifier."""
     return get_biolink_html_documentation(qualifier) or f"ERROR | {qualifier} is not a supported biolink qualifier"
 
 
 @CLI.command
-def extract_text_from_diverse_file_types_with_textract(file: Path, extension: Optional[str] = None) -> str:
+def extract_text(file: Path, extension: Optional[str] = None) -> str:
+    """Extract text from a file using textract (PDF, DOCX, etc.)."""
     if file.suffix == "pdf":
         return textract.process(file, method="pdfminer")
     elif extension:
@@ -222,20 +241,23 @@ def extract_text_from_diverse_file_types_with_textract(file: Path, extension: Op
 
 
 @CLI.command
-def get_excel_sheet_names_from_spreadsheet(file: Path) -> list[str]:
+def excel_sheets(file: Path) -> list[str]:
+    """List sheet names in an Excel spreadsheet."""
     wb: Any = fastexcel.read_excel(file)
     return wb.sheet_names
 
 
 @CLI.command
-def preview_sheet_in_excel_spreadsheet(file: Path, sheet_name: str, n_rows: int, engine="calamine") -> dict[str, Any]:
+def preview_excel(file: Path, sheet_name: str, n_rows: int, engine: str = "calamine") -> dict[str, Any]:
+    """Preview the first N rows of an Excel sheet as a dict."""
     df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
     df = df.head(n_rows)
     return df.to_dict(series=False)
 
 
 @CLI.command
-def preview_tabular_file_contents(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]:
+def preview_csv(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]:
+    """Preview the first N rows of a CSV/tabular file as a dict."""
     df: pl.DataFrame = pl.read_csv(source=file, n_rows=n_rows, separator=separator)
     return df.to_dict(series=False)
 
