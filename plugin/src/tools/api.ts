@@ -21,7 +21,10 @@ export function createApiTools(cli: CliRunner) {
       "Download and extract a PMC tar archive",
       { pmc_id: z.number().int(), dest_dir: z.string().optional() },
       (args: { pmc_id: number; dest_dir?: string }) =>
-        cli("download-pmc-tar", [String(args.pmc_id), ...(args.dest_dir ? [args.dest_dir] : [])]),
+        cli("download-pmc-tar", [
+          String(args.pmc_id),
+          ...(args.dest_dir ? [args.dest_dir] : []),
+        ]),
     ),
     "search-gene-curies": createCliTool(
       "Search gene CURIEs within an NCBI taxon",
@@ -32,7 +35,8 @@ export function createApiTools(cli: CliRunner) {
     "resolve-taxon-id": createCliTool(
       "Resolve an NCBI Taxon ID from an organism name",
       { organism_name: z.string() },
-      (args: { organism_name: string }) => cli("resolve-taxon-id", [args.organism_name]),
+      (args: { organism_name: string }) =>
+        cli("resolve-taxon-id", [args.organism_name]),
     ),
   };
 }

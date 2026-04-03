@@ -7,9 +7,21 @@ const z = tool.schema;
 
 export function createBiolinkTools(cli: CliRunner) {
   return {
-    "list-categories": createCliTool("List all supported Biolink categories", {}, () => cli("list-categories", [])),
-    "list-predicates": createCliTool("List all supported Biolink predicates", {}, () => cli("list-predicates", [])),
-    "list-qualifiers": createCliTool("List all supported Biolink qualifiers", {}, () => cli("list-qualifiers", [])),
+    "list-categories": createCliTool(
+      "List all supported Biolink categories",
+      {},
+      () => cli("list-categories", []),
+    ),
+    "list-predicates": createCliTool(
+      "List all supported Biolink predicates",
+      {},
+      () => cli("list-predicates", []),
+    ),
+    "list-qualifiers": createCliTool(
+      "List all supported Biolink qualifiers",
+      {},
+      () => cli("list-qualifiers", []),
+    ),
     "docs-category": createCliTool(
       "Fetch Biolink docs for a category",
       { category: z.string() },

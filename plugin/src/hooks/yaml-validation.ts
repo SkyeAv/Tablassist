@@ -32,7 +32,14 @@ export function extractYamlPath(args: unknown): string | null {
     return null;
   }
 
-  const preferredKeys = ["filePath", "path", "file", "yaml_file", "target", "destination"];
+  const preferredKeys = [
+    "filePath",
+    "path",
+    "file",
+    "yaml_file",
+    "target",
+    "destination",
+  ];
   for (const key of preferredKeys) {
     const value = args[key];
     if (typeof value === "string" && isYamlPath(value)) {
@@ -52,7 +59,10 @@ export function extractYamlPath(args: unknown): string | null {
 
 export function buildValidationMessage(validationOutput: string): string {
   const normalized = validationOutput.trim();
-  const failed = /["']error["']\s*:/i.test(normalized) || /(^|[\s\[{,])error([\s\]}:,]|$)/i.test(normalized) || /validation error/i.test(normalized);
+  const failed =
+    /["']error["']\s*:/i.test(normalized) ||
+    /(^|[\s\[{,])error([\s\]}:,]|$)/i.test(normalized) ||
+    /validation error/i.test(normalized);
 
   if (failed) {
     return [
@@ -69,7 +79,9 @@ export function buildValidationMessage(validationOutput: string): string {
   ].join("\n");
 }
 
-export function createYamlValidationHook(cli: CliDetailedRunner): NonNullable<Hooks["tool.execute.after"]> {
+export function createYamlValidationHook(
+  cli: CliDetailedRunner,
+): NonNullable<Hooks["tool.execute.after"]> {
   return async (input, output) => {
     if (input.tool.toLowerCase() !== "write") {
       return;

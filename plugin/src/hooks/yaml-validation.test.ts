@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { buildValidationMessage, extractYamlPath, isYamlPath } from "./yaml-validation.ts";
+import {
+  buildValidationMessage,
+  extractYamlPath,
+  isYamlPath,
+} from "./yaml-validation.ts";
 
 describe("yaml validation helpers", () => {
   it("detects yaml paths", () => {
@@ -10,8 +14,12 @@ describe("yaml validation helpers", () => {
   });
 
   it("extracts yaml paths from nested tool args", () => {
-    expect(extractYamlPath({ filePath: "configs/example.yaml" })).toBe("configs/example.yaml");
-    expect(extractYamlPath({ nested: { path: "tables/example.yml" } })).toBe("tables/example.yml");
+    expect(extractYamlPath({ filePath: "configs/example.yaml" })).toBe(
+      "configs/example.yaml",
+    );
+    expect(extractYamlPath({ nested: { path: "tables/example.yml" } })).toBe(
+      "tables/example.yml",
+    );
     expect(extractYamlPath({ path: "notes.md" })).toBeNull();
   });
 

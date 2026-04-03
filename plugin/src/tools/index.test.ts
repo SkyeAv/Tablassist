@@ -4,7 +4,9 @@ import { createAllTools } from "./index.ts";
 
 describe("createAllTools", () => {
   it("registers the full expected tool set", () => {
-    const tools = createAllTools(async (command, args) => `${command}:${args.join(",")}`);
+    const tools = createAllTools(
+      async (command, args) => `${command}:${args.join(",")}`,
+    );
 
     expect(Object.keys(tools).sort()).toEqual([
       "docs-category",

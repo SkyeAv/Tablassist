@@ -7,8 +7,10 @@ import { createYamlValidationHook } from "./hooks/yaml-validation.ts";
 import { createAllTools } from "./tools/index.ts";
 
 const Tablassist: Plugin = async ({ $ }) => {
-  const cli = (command: string, args: string[]) => runCliCommand($, command, args);
-  const cliDetailed = (command: string, args: string[]) => runCliDetailed($, command, args);
+  const cli = (command: string, args: string[]) =>
+    runCliCommand($, command, args);
+  const cliDetailed = (command: string, args: string[]) =>
+    runCliDetailed($, command, args);
   const cache = createTablassistCache(cli);
 
   return {

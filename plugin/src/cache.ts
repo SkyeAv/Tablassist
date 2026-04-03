@@ -34,29 +34,37 @@ export function createTablassistCache(loader: CacheLoader) {
       return current;
     }
 
-    const request = loader(RESOURCE_COMMANDS[key], []).then((value) => {
-      values.set(key, value);
-      pending.delete(key);
-      return value;
-    }).catch((error) => {
-      pending.delete(key);
-      throw error;
-    });
+    const request = loader(RESOURCE_COMMANDS[key], [])
+      .then((value) => {
+        values.set(key, value);
+        pending.delete(key);
+        return value;
+      })
+      .catch((error) => {
+        pending.delete(key);
+        throw error;
+      });
 
     pending.set(key, request);
     return request;
   }
 
   async function getSystemPromptResources(): Promise<CachedResourceMap> {
-    const [sectionSchema, docsTableConfig, docsAdvancedExamples, docsTutorial, exampleNoSections, exampleWithSections] =
-      await Promise.all([
-        get("sectionSchema"),
-        get("docsTableConfig"),
-        get("docsAdvancedExamples"),
-        get("docsTutorial"),
-        get("exampleNoSections"),
-        get("exampleWithSections"),
-      ]);
+    const [
+      sectionSchema,
+      docsTableConfig,
+      docsAdvancedExamples,
+      docsTutorial,
+      exampleNoSections,
+      exampleWithSections,
+    ] = await Promise.all([
+      get("sectionSchema"),
+      get("docsTableConfig"),
+      get("docsAdvancedExamples"),
+      get("docsTutorial"),
+      get("exampleNoSections"),
+      get("exampleWithSections"),
+    ]);
 
     return {
       sectionSchema,

@@ -1,7 +1,10 @@
 import type { PluginInput } from "@opencode-ai/plugin";
 
 export type CliRunner = (command: string, args: string[]) => Promise<string>;
-export type CliDetailedRunner = (command: string, args: string[]) => Promise<CliCommandResult>;
+export type CliDetailedRunner = (
+  command: string,
+  args: string[],
+) => Promise<CliCommandResult>;
 
 export type CliCommandResult = {
   command: string;
@@ -16,7 +19,9 @@ export async function runCliDetailed(
   command: string,
   args: string[],
 ): Promise<CliCommandResult> {
-  const shellCommand = ["tablassist", command, ...args].map((part) => shell.escape(part)).join(" ");
+  const shellCommand = ["tablassist", command, ...args]
+    .map((part) => shell.escape(part))
+    .join(" ");
   const output = await shell.nothrow()`${{ raw: shellCommand }}`.quiet();
 
   return {
@@ -28,7 +33,11 @@ export async function runCliDetailed(
   };
 }
 
-export async function runCliCommand(shell: PluginInput["$"], command: string, args: string[]): Promise<string> {
+export async function runCliCommand(
+  shell: PluginInput["$"],
+  command: string,
+  args: string[],
+): Promise<string> {
   const result = await runCliDetailed(shell, command, args);
 
   if (result.exitCode !== 0) {
