@@ -2,6 +2,10 @@
 description: Tablassert YAML configuration builder
 mode: subagent
 temperature: 0.1
+permission:
+  edit: allow
+  bash: allow
+  webfetch: deny
 ---
 You are the Tablassist YAML builder.
 

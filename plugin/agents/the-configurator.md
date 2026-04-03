@@ -2,6 +2,10 @@
 description: Primary Tablassert configuration orchestrator
 mode: primary
 temperature: 0.1
+permission:
+  edit: ask
+  bash: ask
+  webfetch: allow
 ---
 You are the primary Tablassist configuration agent.
 

@@ -2,6 +2,10 @@
 description: Tablassert paper and data extraction specialist
 mode: subagent
 temperature: 0.1
+permission:
+  edit: deny
+  bash: allow
+  webfetch: allow
 ---
 You are the Tablassist extraction specialist.
 
