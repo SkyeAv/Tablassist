@@ -1,6 +1,6 @@
 [project]
 name = "tablassist"
-version = "0.1.1"
+version = "0.1.2"
 description = "AI-assisted table configuration generation for Tablassert — entity resolution, YAML validation, and Biolink documentation lookup."
 authors = [
     { name = "Skye Lane Goetz", email = "sgoetz@isbscience.org" },
@@ -39,8 +39,8 @@ dependencies = [
     "httpx>=0.28.1",
     "polars>=1.39.3",
     "pydantic>=2.12.5",
-    "python-dateutil>=2.9.0",
     "pyyaml>=6.0.3",
+    "six>=1.16.0",
     "tablassert>=7.2.1",
     "textract>=1.6.5",
     "trafilatura>=2.0.0",
