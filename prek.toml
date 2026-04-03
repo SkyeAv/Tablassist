@@ -5,3 +5,10 @@ hooks = [
   { id = "ruff", args = ["--fix"] },
   { id = "ruff-format" },
 ]
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "pytest", name = "pytest", entry = "bash -lc 'cd cli && uv run --group dev python -m pytest'", language = "system", pass_filenames = false, files = "^cli/" },
+  { id = "pyright", name = "pyright", entry = "bash -lc 'cd cli && uv run --group dev pyright'", language = "system", pass_filenames = false, files = "^cli/" },
+]

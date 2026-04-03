@@ -2,7 +2,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import fastexcel
 import httpx
@@ -11,7 +11,7 @@ import textract
 import yaml
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
-from tablassert.ingests import from_yaml, to_sections
+from tablassert.ingests import from_yaml
 from tablassert.models import Section
 
 from tablassist.utils import (
@@ -159,7 +159,7 @@ def list_qualifiers() -> list[str]:
 
 
 @CLI.command
-def section_schema() -> str:
+def section_schema() -> dict[str, Any]:
     """Return the Section Pydantic model as JSON schema."""
     return Section.model_json_schema()
 
@@ -181,7 +181,7 @@ def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str
     if isinstance(raw, dict) and "error" in raw:
         return raw
 
-    sections: list[dict[str, Any]] = to_sections(raw)
+    sections: list[dict[str, Any]] = raw if isinstance(raw, list) else [raw]
 
     errors: list[dict[str, Any]] = []
     for s in sections:
@@ -202,7 +202,7 @@ def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str
     except yaml.YAMLError as e:
         return {"error": f"YAML error: {e}"}
 
-    sections: list[dict[str, Any]] = to_sections(raw)
+    sections: list[dict[str, Any]] = raw if isinstance(raw, list) else [raw]
 
     errors: list[dict[str, Any]] = []
     for s in sections:
@@ -248,18 +248,20 @@ def excel_sheets(file: Path) -> list[str]:
 
 
 @CLI.command
-def preview_excel(file: Path, sheet_name: str, n_rows: int, engine: str = "calamine") -> dict[str, Any]:
+def preview_excel(
+    file: Path, sheet_name: str, n_rows: int, engine: Literal["calamine", "openpyxl", "xlsx2csv"] = "calamine"
+) -> dict[str, Any]:
     """Preview the first N rows of an Excel sheet as a dict."""
     df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
     df = df.head(n_rows)
-    return df.to_dict(series=False)
+    return df.to_dict(as_series=False)
 
 
 @CLI.command
 def preview_csv(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]:
     """Preview the first N rows of a CSV/tabular file as a dict."""
     df: pl.DataFrame = pl.read_csv(source=file, n_rows=n_rows, separator=separator)
-    return df.to_dict(series=False)
+    return df.to_dict(as_series=False)
 
 
 def serve() -> None:

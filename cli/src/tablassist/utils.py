@@ -27,7 +27,7 @@ def get_biolink_html_documentation(biolink_thing: str) -> str:
     url: str = f"https://raw.githubusercontent.com/biolink/biolink-model/gh-pages/{quote(biolink_thing)}/index.html"
     html: str = get_static_content(url)
 
-    return trafilatura.extract(html, output_format="markdown")
+    return trafilatura.extract(html, output_format="markdown") or ""
 
 
 def validate_section(s: dict[str, Any]) -> dict[str, Any]:
