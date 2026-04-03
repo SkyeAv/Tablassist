@@ -37,10 +37,11 @@ tablassist = "tablassist.cli:serve"
 
 [project.optional-dependencies]
 rtcompat = [
+    "tablassert[rtcompat]=7.2.1",
     "polars[rtcompat]>=1.39.0",
 ]
 rt = [
-    "tablassert[rtcompat]",
+    "tablassist[rtcompat]",
 ]
 
 [dependency-groups]
