@@ -1,8 +1,37 @@
 [project]
 name = "tablassist"
 version = "1.0.0"
-description = "Add your description here"
-readme = "./../README.md"
+description = "AI-assisted table configuration generation for Tablassert — entity resolution, YAML validation, and Biolink documentation lookup."
+authors = [
+    { name = "Skye Lane Goetz", email = "sgoetz@isbscience.org" },
+]
+keywords = [
+    "knowledge graph",
+    "bioinformatics",
+    "entity resolution",
+    "ncats translator",
+    "yaml configuration",
+    "table mining",
+    "tablassert",
+    "tablassist",
+    "biolink",
+    "data quality control",
+]
+readme = "README.md"
+license = "Apache-2.0"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.13",
+    "Framework :: Pydantic",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
 requires-python = ">=3.13"
 dependencies = [
     "cyclopts>=4.10.1",
@@ -16,10 +45,9 @@ dependencies = [
     "trafilatura>=2.0.0",
 ]
 
-[tool.uv]
-override-dependencies = [
-    "six>=1.16.0",
-]
+[project.urls]
+Homepage = "https://github.com/SkyeAv/Tablassist"
+Source = "https://github.com/SkyeAv/Tablassist"
 
 [build-system]
 requires = [
@@ -37,11 +65,16 @@ tablassist = "tablassist.cli:serve"
 
 [project.optional-dependencies]
 rtcompat = [
-    "tablassert[rtcompat]=7.2.1",
+    "tablassert[rtcompat]>=7.2.1",
     "polars[rtcompat]>=1.39.0",
 ]
 rt = [
     "tablassist[rtcompat]",
+]
+
+[tool.uv]
+override-dependencies = [
+    "six>=1.16.0",
 ]
 
 [dependency-groups]
@@ -51,6 +84,9 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.15.6",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
 
 [tool.ruff]
 line-length = 120

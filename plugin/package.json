@@ -1,7 +1,36 @@
 {
-  "name": "tablassist",
+  "name": "@skyeav/tablassist",
+  "version": "1.0.0",
+  "description": "OpenCode plugin for Tablassert table configuration — entity resolution, YAML validation, and Biolink documentation tools.",
   "module": "./src/index.ts",
   "type": "module",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Skye Lane Goetz",
+    "email": "sgoetz@isbscience.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkyeAv/Tablassist",
+    "directory": "plugin"
+  },
+  "homepage": "https://github.com/SkyeAv/Tablassist",
+  "keywords": [
+    "opencode",
+    "plugin",
+    "tablassert",
+    "tablassist",
+    "bioinformatics",
+    "knowledge-graph",
+    "yaml-configuration",
+    "biolink",
+    "entity-resolution"
+  ],
+  "files": [
+    "src",
+    "agents",
+    "README.md"
+  ],
   "scripts": {
     "test": "bun test",
     "typecheck": "bun x tsc --noEmit"

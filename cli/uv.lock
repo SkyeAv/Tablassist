@@ -2261,10 +2261,12 @@ dependencies = [
 
 [package.optional-dependencies]
 rt = [
+    { name = "polars", extra = ["rtcompat"] },
     { name = "tablassert", extra = ["rtcompat"] },
 ]
 rtcompat = [
     { name = "polars", extra = ["rtcompat"] },
+    { name = "tablassert", extra = ["rtcompat"] },
 ]
 
 [package.dev-dependencies]
@@ -2285,7 +2287,8 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "tablassert", specifier = ">=7.2.1" },
-    { name = "tablassert", extras = ["rtcompat"], marker = "extra == 'rt'" },
+    { name = "tablassert", extras = ["rtcompat"], marker = "extra == 'rtcompat'", specifier = ">=7.2.1" },
+    { name = "tablassist", extras = ["rtcompat"], marker = "extra == 'rt'" },
     { name = "textract", specifier = ">=1.6.5" },
     { name = "trafilatura", specifier = ">=2.0.0" },
 ]
