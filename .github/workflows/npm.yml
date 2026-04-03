@@ -18,8 +18,6 @@ jobs:
         run: bun install
       - name: Type check
         run: bun x tsc --noEmit
-      - name: Build package
-        run: bun run build
       - name: Publish to npm
         run: bunx npm publish --provenance --access public
         env:
