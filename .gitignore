@@ -9,3 +9,6 @@
 
 # Pytest Cache
 *.pytest_cache/
+
+# Node JS
+*node_modules/
