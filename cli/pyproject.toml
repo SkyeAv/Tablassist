@@ -39,6 +39,7 @@ dependencies = [
     "httpx>=0.28.1",
     "polars>=1.39.3",
     "pydantic>=2.12.5",
+    "python-dateutil>=2.9.0",
     "pyyaml>=6.0.3",
     "tablassert>=7.2.1",
     "textract>=1.6.5",
