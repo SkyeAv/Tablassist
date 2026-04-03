@@ -12,3 +12,6 @@
 
 # Node JS
 *node_modules/
+
+# Direnv
+*.envrc
