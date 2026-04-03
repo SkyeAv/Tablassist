@@ -8,7 +8,6 @@ dependencies = [
     "cyclopts>=4.10.1",
     "fastexcel>=0.19.0",
     "httpx>=0.28.1",
-    "pdf2txt>=0.7.14",
     "polars>=1.39.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
