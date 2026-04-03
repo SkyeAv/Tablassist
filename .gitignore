@@ -1,6 +1,8 @@
 # Opencode generated files
 *AGENTS.md
 *plans/
+*docs/
+*specs/
 
 # Ruff Cache
 *.ruff_cache/
