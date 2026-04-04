@@ -27,6 +27,8 @@ This plugin gives AI agents access to the full Tablassist CLI toolset through Op
 - **Data Preview** — Inspect Excel and CSV files before building configurations
 - **Configuration Reference** — Access production examples and schema documentation
 
+Full config validation expects `template:` as the top-level YAML key, with optional `sections:`. The standalone `validate-section-str` tool is only for checking an individual merged section shape.
+
 ## Architecture
 
 The plugin wraps the [Tablassist CLI](../cli/) and exposes its commands as OpenCode tools:

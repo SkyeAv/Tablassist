@@ -68,6 +68,8 @@ tablassist docs-qualifier "qualified_predicate"
 
 ### YAML Validation
 
+Full config validation requires `template:` as the top-level key, with optional `sections:`. Use `validate-section-str` only for individual section mappings, not for whole config files.
+
 ```bash
 # Validate a full config file
 tablassist validate-config-file config.yaml

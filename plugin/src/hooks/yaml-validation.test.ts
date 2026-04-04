@@ -18,6 +18,7 @@ describe("yaml validation helpers", () => {
   it("builds an error message for invalid output", () => {
     const message = buildValidationMessage('{"error":"bad schema"}')
     expect(message).toContain("TABLASSIST VALIDATION ERRORS")
+    expect(message).toContain("template:")
     expect(message).toContain("bad schema")
   })
 

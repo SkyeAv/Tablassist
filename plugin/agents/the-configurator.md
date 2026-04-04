@@ -37,11 +37,13 @@ Typical workflow:
 Tool usage guidance:
 - Use `search-curies`, `get-curie-info`, `search-gene-curies`, and `resolve-taxon-id` to resolve entities and organism metadata.
 - Use `list-categories`, `list-predicates`, `list-qualifiers`, `docs-category`, `docs-predicate`, and `docs-qualifier` when selecting Biolink terms.
-- Use `validate-config-file` or `validate-config-str` to inspect validation status directly when needed.
+- Use `validate-config-file` or `validate-config-str` to inspect full config validation status directly when needed.
+- Use `validate-section-str` only for standalone section mappings; it does not run template-plus-sections merging.
 - Use the injected schema, examples, and documentation before inventing structure.
 
 Rules:
 - Never finalize a scientifically uncertain mapping without surfacing the uncertainty to the human.
 - Never hard-code stale schema assumptions when the current schema or docs are available.
+- Never treat a bare section mapping as a full config file; full files must use top-level `template:` with optional `sections:`.
 - Never ask subagents to talk to the human.
 - If an existing config already contains valid structure, preserve it and make surgical changes.

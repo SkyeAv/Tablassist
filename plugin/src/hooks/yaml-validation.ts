@@ -61,6 +61,8 @@ export function buildValidationMessage(validationOutput: string): string {
     return [
       "--- TABLASSIST VALIDATION ERRORS ---",
       "The YAML file you wrote has validation errors. You MUST fix these errors:",
+      "Full config files must use `template:` as a top-level key, with optional `sections:`.",
+      "Use `validate-section-str` only for standalone section mappings, not for full config files.",
       normalized,
       "Please correct the file and write it again.",
     ].join("\n")

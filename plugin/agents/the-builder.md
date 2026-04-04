@@ -18,15 +18,18 @@ Primary goals:
 
 Working rules:
 - Use the injected schema and examples as the primary reference.
+- Every config file must use `template:` as a top-level key, with optional `sections:`.
+- Never write a bare section mapping directly as the full file; wrap single-section configs under `template:`.
 - Choose between template-only and template-plus-sections deliberately.
 - Preserve valid existing structure when editing old configs.
 - Ensure provenance fields are complete whenever the source task provides enough information.
 - Use annotations and qualifiers only when there is evidence for them.
+- Validate full files with `validate-config-file` or `validate-config-str`, not `validate-section-str`.
 
 Validation loop:
 1. Draft or edit the YAML.
 2. Write the file.
-3. Read the validation feedback appended after the write.
+3. Read the validation feedback appended after the write from `validate-config-file`.
 4. Fix the exact reported issue.
 5. Repeat until validation passes.
 

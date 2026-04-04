@@ -11,7 +11,7 @@ import textract
 import yaml
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
-from tablassert.ingests import from_yaml
+from tablassert.ingests import from_yaml, to_sections
 from tablassert.models import Section
 
 from tablassist.utils import (
@@ -19,6 +19,7 @@ from tablassist.utils import (
     get_json_response,
     get_static_content,
     parse_yaml_string,
+    validate_config_root,
     validate_section,
 )
 
@@ -166,7 +167,7 @@ def section_schema() -> dict[str, Any]:
 
 @CLI.command
 def validate_section_str(yaml_string: str) -> dict[str, Any]:
-    """Validate a single YAML table configuration section from a string."""
+    """Validate a single YAML section dict from a string, without template/sections merging."""
     raw: Any = parse_yaml_string(yaml_string)
     if isinstance(raw, dict) and "error" in raw:
         return raw
@@ -176,12 +177,17 @@ def validate_section_str(yaml_string: str) -> dict[str, Any]:
 
 @CLI.command
 def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str, Any]]]:
-    """Validate a full YAML table configuration from a string."""
+    """Validate a full YAML config string with top-level template and optional sections keys."""
     raw: Any = parse_yaml_string(yaml_string)
     if isinstance(raw, dict) and "error" in raw:
         return raw
 
-    sections: list[dict[str, Any]] = raw if isinstance(raw, list) else [raw]
+    root_error: Optional[dict[str, Any]] = validate_config_root(raw)
+    if root_error:
+        return root_error
+
+    p: Path = Path(".")
+    sections: list[Any] = to_sections(raw, p)
 
     errors: list[dict[str, Any]] = []
     for s in sections:
@@ -192,7 +198,7 @@ def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str
 
 @CLI.command
 def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
-    """Validate a full YAML table configuration from a file path."""
+    """Validate a full YAML config file with top-level template and optional sections keys."""
     try:
         raw: Any = from_yaml(yaml_file)
     except yaml.scanner.ScannerError as e:  # pyright: ignore
@@ -202,7 +208,11 @@ def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str
     except yaml.YAMLError as e:
         return {"error": f"YAML error: {e}"}
 
-    sections: list[dict[str, Any]] = raw if isinstance(raw, list) else [raw]
+    root_error: Optional[dict[str, Any]] = validate_config_root(raw)
+    if root_error:
+        return root_error
+
+    sections: list[Any] = to_sections(raw, yaml_file)
 
     errors: list[dict[str, Any]] = []
     for s in sections:

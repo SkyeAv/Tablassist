@@ -11,17 +11,17 @@ export function createSchemaTools(cli: CliRunner) {
       cli("section-schema", []),
     ),
     "validate-section-str": createCliTool(
-      "Validate a single YAML section from string",
+      "Validate a single bare YAML section only; use full-config validation for template/sections files",
       { yaml_string: z.string() },
       (args: { yaml_string: string }) => cli("validate-section-str", [args.yaml_string]),
     ),
     "validate-config-str": createCliTool(
-      "Validate a full YAML config from string",
+      "Validate a full YAML config string with top-level template and optional sections keys",
       { yaml_string: z.string() },
       (args: { yaml_string: string }) => cli("validate-config-str", [args.yaml_string]),
     ),
     "validate-config-file": createCliTool(
-      "Validate a full YAML config from file path",
+      "Validate a full YAML file with top-level template and optional sections keys",
       { yaml_file: z.string() },
       (args: { yaml_file: string }) => cli("validate-config-file", [args.yaml_file]),
     ),
