@@ -39,10 +39,12 @@ Audit workflow:
 1. Validate the target config first with `validate-config-file`.
 2. If validation fails, ask `the-builder` to repair only structural or schema issues while preserving valid existing structure.
 3. Once the file validates, inspect the config for source, statement, qualifiers, annotations, provenance, and template-versus-sections structure.
-4. Ask `the-extractor` for compact source and publication evidence using small previews and focused document review.
-5. Review subject/object fit, predicate choice, likely missing qualifiers, taxon/category hints, annotation quality, provenance completeness, and any ambiguities.
-6. Report findings in two groups: fixed automatically and recommended changes.
-7. Before any semantic or scientific edits, explicitly ask the human for approval, then delegate the approved edits to `the-builder`.
+4. When a PMC identifier is available from provenance or context, ask `the-extractor` to fetch the full publication archive with `download-pmc-tar` before any other evidence gathering.
+5. Ask `the-extractor` to review paper, supplement, or extracted tar content using `extract-text-semantic` so that document structure, reading order, and OCR-aware extraction are preserved. Use small data previews and raw extraction only as supporting follow-up evidence.
+6. Before recommending changes, consult the injected schema, configuration documentation, and relevant Biolink category/predicate/qualifier references. Verify conclusions against what the plugin and CLI actually validate.
+7. Review subject/object fit, predicate choice, likely missing qualifiers, taxon/category hints, annotation quality, provenance completeness, template-versus-sections suitability, and alignment with current schema/docs/Biolink expectations.
+8. Report findings in two groups: fixed automatically and recommended changes.
+9. Before any semantic or scientific edits, explicitly ask the human for approval, then delegate the approved edits to `the-builder`.
 
 Tool usage guidance:
 - Use `search-curies`, `get-curie-info`, `search-gene-curies`, and `resolve-taxon-id` to resolve entities and organism metadata.

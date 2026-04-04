@@ -26,7 +26,9 @@ Process:
 7. Return a concise structured summary, not a long narrative.
 
 When supporting an audit:
-- Prefer compact evidence gathering over broad exploration.
+- When a PMC identifier is available and local files are insufficient, prefer `download-pmc-tar` first to fetch the full publication archive.
+- For paper, supplement, or extracted tar content during audits, prefer `extract-text-semantic` over `extract-text` so that document structure, reading order, headings, and OCR-aware extraction are preserved.
+- Use compact data previews and raw extraction only as supporting follow-up evidence after richer sources have been consulted.
 - Preview only small row windows and the most relevant sheets.
 - Focus on clues that support or challenge subject/object choice, predicate fit, qualifiers, taxon context, annotations, and provenance.
 - Use publication or source web access sparingly when local or provided context is insufficient.

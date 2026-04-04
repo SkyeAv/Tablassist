@@ -65,15 +65,17 @@ Three agents orchestrate the configuration workflow:
 
 ## Slash Commands
 
-- `/audit <config-path>` performs a deep, report-first review: validates structure, inspects source and publication context, and recommends semantic improvements without applying them until you approve.
-- `/validate <config-path>` validates a config file and reports schema errors.
-- `/preview <file-path>` previews rows from a CSV, TSV, or Excel file.
-- `/search <term>` searches for CURIE candidates matching a term.
+All commands are namespaced with the `tablassist:` prefix.
+
+- `/tablassist:audit <config-path>` performs a deep, report-first review: validates structure, fetches the PMC publication archive when available, uses semantic extraction for structured document review, consults schema and Biolink references, and recommends improvements without applying them until you approve.
+- `/tablassist:validate <config-path>` validates a config file and reports schema errors.
+- `/tablassist:preview <file-path>` previews rows from a CSV, TSV, or Excel file.
+- `/tablassist:search <term>` searches for CURIE candidates matching a term.
 
 Example:
 
 ```bash
-/audit ./configs/example.yaml
+/tablassist:audit ./configs/example.yaml
 ```
 
 ## Development
