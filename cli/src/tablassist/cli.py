@@ -101,11 +101,11 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
     with httpx.stream("GET", url, params=params) as r:
-        if r.status_code == 404:
+        if r.status_code in [404, 400]:
             error: dict[str, Any] = r.json()
             return error
 
-        d: str = r.headers["content-disposition"]
+        d: str = r.headers.get("content-disposition", "")
         matches: object = re.search(r"filename=(.+)", d)
 
         filename: str = matches.group(1) if matches else "download.tar.xz"
@@ -114,7 +114,7 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
             for chunk in r.iter_bytes():
                 f.write(chunk)
 
-    cmd: list[str] = ["tar", "-xvf", f"{p}", "&&", "ls", "-lh", f"{dest_dir}"]
+    cmd: str = f"tar -xvf '{p}' && ls -lh '{dest_dir}'"
     r: Any = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
     return {"status": "ok", "stdout": r.stdout, "stderr": r.stderr}
