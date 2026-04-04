@@ -1,15 +1,18 @@
-from typing import Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 from urllib.parse import quote
 
 import httpx
+import lazy_loader as Lazy
 import trafilatura
 import yaml
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.document_converter import DocumentConverter, ImageFormatOption, PdfFormatOption
 from pydantic import ValidationError
 from tablassert.models import Section
 from yaml import CLoader
+
+if TYPE_CHECKING:
+    import docling
+else:
+    docling = Lazy.load("docling")
 
 
 def get_static_content(url: str) -> str:
@@ -70,15 +73,19 @@ def parse_yaml_string(yaml_string: str) -> Any:
         return {"error": f"YAML error: {e}"}
 
 
-def build_semantic_converter(ocr: Literal["auto", "off", "on"] = "auto") -> "DocumentConverter":
+def build_semantic_converter(ocr: Literal["auto", "off", "on"] = "auto") -> Any:
     """Build a Docling converter for semantic extraction."""
     if ocr == "auto":
-        return DocumentConverter()
+        return docling.document_converter.DocumentConverter()  # pyright: ignore
 
-    pipeline_options = PdfPipelineOptions()
+    pipeline_options = docling.datamodel.pipeline_options.PdfPipelineOptions()  # pyright: ignore
     pipeline_options.do_ocr = ocr == "on"
     format_options = {
-        InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
-        InputFormat.IMAGE: ImageFormatOption(pipeline_options=pipeline_options),
+        docling.datamodel.base_models.InputFormat.PDF: docling.document_converter.PdfFormatOption(  # pyright: ignore
+            pipeline_options=pipeline_options
+        ),
+        docling.datamodel.base_models.InputFormat.IMAGE: docling.document_converter.ImageFormatOption(  # pyright: ignore
+            pipeline_options=pipeline_options
+        ),
     }
-    return DocumentConverter(format_options=format_options)
+    return docling.document_converter.DocumentConverter(format_options=format_options)  # pyright: ignore

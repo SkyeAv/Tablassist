@@ -2,12 +2,12 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 import fastexcel
 import httpx
+import lazy_loader as Lazy
 import polars as pl
-import textract
 import yaml
 from cyclopts import App
 from tablassert.enums import Categories, Predicates, Qualifiers
@@ -23,6 +23,11 @@ from tablassist.utils import (
     validate_config_root,
     validate_section,
 )
+
+if TYPE_CHECKING:
+    import textract
+else:
+    textract = Lazy.load("textract")
 
 CLI: App = App()
 
