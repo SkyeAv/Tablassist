@@ -14,7 +14,7 @@ export function createFileTools(cli: CliRunner) {
         cli("extract-text", [args.file, ...(args.extension ? [args.extension] : [])]),
     ),
     "extract-text-semantic": createCliTool(
-      "Extract structured semantic text from documents",
+      "Extract semantic Markdown or text with Docling",
       {
         file: z.string(),
         output_format: z.enum(["markdown", "text"]).optional(),

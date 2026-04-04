@@ -61,6 +61,8 @@ Tablassist now exposes two complementary document extraction paths:
 - `extract-text` / `extract-text` tool for fast Textract-based raw text extraction
 - `extract-text-semantic` / `extract-text-semantic` tool for Docling-backed semantic extraction with Markdown output and `ocr=auto`
 
+Current CLI releases ship Docling in the default Python dependency set, and the OpenCode plugin forwards directly to that semantic extraction endpoint.
+
 ## Development
 
 See [`cli/README.md`](cli/README.md) for Python CLI development and [`plugin/README.md`](plugin/README.md) for plugin development.

@@ -17,6 +17,8 @@ Tablassist ships with two document extraction modes:
 pip install tablassist
 ```
 
+The base install now includes Docling, so `extract-text-semantic` works without a separate helper script or optional extra.
+
 An optional extra is available for CPU compatibility:
 
 ```bash
@@ -113,7 +115,7 @@ tablassist extract-text-semantic document.pdf text off
 
 `extract-text` is optimized for fast, low-overhead text grabs.
 
-`extract-text-semantic` runs IBM Docling in an isolated `uv run` script environment so Tablassist can offer richer extraction without introducing a dependency conflict into the main CLI environment. It is the better choice when reading order, headings, lists, or table-aware Markdown matter more than raw speed.
+`extract-text-semantic` runs IBM Docling directly from the CLI module. It is the better choice when reading order, headings, lists, or table-aware Markdown matter more than raw speed.
 
 Arguments for `extract-text-semantic`:
 

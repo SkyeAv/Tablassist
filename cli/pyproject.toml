@@ -35,14 +35,17 @@ classifiers = [
 requires-python = ">=3.13"
 dependencies = [
     "cyclopts>=4.10.1",
+    "docling>=2.84.0",
     "fastexcel>=0.19.0",
     "httpx>=0.28.1",
+    "openpyxl>=3.1.5",
     "polars>=1.39.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
-    "tablassert>=7.2.1",
+    "tablassert>=7.3.2",
     "textract-py3>=3.0.0",
     "trafilatura>=2.0.0",
+    "xlsx2csv>=0.8.6",
 ]
 
 [project.urls]
@@ -75,6 +78,9 @@ rt = [
 [tool.uv]
 override-dependencies = [
     "six>=1.16.0",
+]
+environments = [
+    "sys_platform != 'win32'",
 ]
 
 [dependency-groups]

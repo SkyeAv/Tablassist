@@ -17,6 +17,8 @@ Add the plugin to your OpenCode configuration. The plugin requires the Tablassis
 pip install tablassist
 ```
 
+Current Tablassist CLI releases include Docling in the base install, so the plugin can call `extract-text-semantic` without any separate semantic extraction helper.
+
 ## What It Does
 
 This plugin gives AI agents access to the full Tablassist CLI toolset through OpenCode:
@@ -36,7 +38,7 @@ Document extraction tools:
 - `extract-text` for fast raw text extraction from PDFs, DOCX, and similar files
 - `extract-text-semantic` for richer Markdown or plain-text extraction with `ocr=auto` by default
 
-The semantic extractor uses an isolated Docling `uv run` script on the CLI side so the plugin can expose richer extraction without requiring Docling to coexist in the main CLI dependency set.
+The semantic extractor calls the CLI's built-in Docling path directly, so the plugin exposes the same semantic extraction endpoint that the CLI ships by default.
 
 ## Architecture
 
