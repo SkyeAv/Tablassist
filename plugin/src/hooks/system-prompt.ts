@@ -1,5 +1,6 @@
 import type { Hooks } from "@opencode-ai/plugin"
 
+import type { AgentTracker } from "../agent-tracker.ts"
 import type { CachedResourceMap, TablassistCache } from "../cache.ts"
 
 export function formatSystemPromptResources(resources: CachedResourceMap): string[] {
@@ -15,8 +16,11 @@ export function formatSystemPromptResources(resources: CachedResourceMap): strin
 
 export function createSystemPromptHook(
   cache: TablassistCache,
+  tracker: AgentTracker,
 ): NonNullable<Hooks["experimental.chat.system.transform"]> {
-  return async (_input, output) => {
+  return async (input, output) => {
+    if (!tracker.needsResources(input.sessionID)) return
+
     const resources = await cache.getSystemPromptResources()
     output.system.push(...formatSystemPromptResources(resources))
   }

@@ -26,4 +26,10 @@ describe("yaml validation helpers", () => {
     const message = buildValidationMessage('[{"status":"ok"}]')
     expect(message).toContain("TABLASSIST VALIDATION: PASSED")
   })
+
+  it("detects CLI error prefix as validation failure", () => {
+    const message = buildValidationMessage("ERROR: Command failed: validate-config-file")
+    expect(message).toContain("TABLASSIST VALIDATION ERRORS")
+    expect(message).toContain("Command failed")
+  })
 })

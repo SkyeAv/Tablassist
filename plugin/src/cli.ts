@@ -1,5 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 
+export const CLI_ERROR_PREFIX = "ERROR: "
+
 export type CliRunner = (command: string, args: string[]) => Promise<string>
 export type CliDetailedRunner = (command: string, args: string[]) => Promise<CliCommandResult>
 
@@ -32,7 +34,8 @@ export async function runCliCommand(shell: PluginInput["$"], command: string, ar
   const result = await runCliDetailed(shell, command, args)
 
   if (result.exitCode !== 0) {
-    return result.stderr || result.stdout || `Command failed: ${command}`
+    const message = result.stderr || result.stdout || `Command failed: ${command}`
+    return `${CLI_ERROR_PREFIX}${message}`
   }
 
   return result.stdout

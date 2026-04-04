@@ -2,7 +2,7 @@ import { extname } from "node:path"
 
 import type { Hooks } from "@opencode-ai/plugin"
 
-import type { CliDetailedRunner } from "../cli.ts"
+import { CLI_ERROR_PREFIX, type CliDetailedRunner } from "../cli.ts"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
@@ -53,6 +53,7 @@ export function extractYamlPath(args: unknown): string | null {
 export function buildValidationMessage(validationOutput: string): string {
   const normalized = validationOutput.trim()
   const failed =
+    normalized.startsWith(CLI_ERROR_PREFIX) ||
     /["']error["']\s*:/i.test(normalized) ||
     /(^|[\s\[{,])error([\s\]}:,]|$)/i.test(normalized) ||
     /validation error/i.test(normalized)

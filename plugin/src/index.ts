@@ -1,5 +1,6 @@
 import type { Plugin } from "@opencode-ai/plugin"
 
+import { createAgentTracker, createAgentTrackingHook } from "./agent-tracker.ts"
 import { createTablassistCache } from "./cache.ts"
 import { runCliCommand, runCliDetailed } from "./cli.ts"
 import { createAgentConfigHook } from "./hooks/agent-config.ts"
@@ -12,6 +13,7 @@ const Tablassist: Plugin = async ({ $ }) => {
   const cli = (command: string, args: string[]) => runCliCommand($, command, args)
   const cliDetailed = (command: string, args: string[]) => runCliDetailed($, command, args)
   const cache = createTablassistCache(cli)
+  const tracker = createAgentTracker()
 
   const agentConfigHook = createAgentConfigHook()
   const commandConfigHook = createCommandConfigHook()
@@ -22,8 +24,9 @@ const Tablassist: Plugin = async ({ $ }) => {
       await commandConfigHook(config)
     },
     tool: createAllTools(cli),
+    "chat.params": createAgentTrackingHook(tracker),
     "tool.execute.after": createYamlValidationHook(cliDetailed),
-    "experimental.chat.system.transform": createSystemPromptHook(cache),
+    "experimental.chat.system.transform": createSystemPromptHook(cache, tracker),
   }
 }
 
