@@ -65,8 +65,10 @@ Three agents orchestrate the configuration workflow:
 
 ## Slash Commands
 
+- `/audit <config-path>` performs a deep, report-first review: validates structure, inspects source and publication context, and recommends semantic improvements without applying them until you approve.
 - `/validate <config-path>` validates a config file and reports schema errors.
-- `/audit <config-path>` performs a deeper, report-first review: it can auto-fix structural validation issues, inspect source and publication context, and then recommend semantic improvements without applying them until you approve.
+- `/preview <file-path>` previews rows from a CSV, TSV, or Excel file.
+- `/search <term>` searches for CURIE candidates matching a term.
 
 Example:
 
