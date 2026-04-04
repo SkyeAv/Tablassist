@@ -9,8 +9,6 @@ AI-assisted table configuration generation for [Tablassert](https://github.com/S
 
 Tablassist helps you create and validate Tablassert table configurations. Where Tablassert extracts knowledge assertions from tabular data into NCATS Translator-compliant KGX NDJSON, Tablassist provides the tooling to build those configurations correctly — with CURIE resolution, schema validation, and interactive documentation built in.
 
-Full table configuration files must use `template:` as the top-level key, with optional `sections:` for merged variants. Bare section mappings are only valid for single-section schema checks.
-
 ## Components
 
 This is a polyglot monorepo with two distributable packages:
