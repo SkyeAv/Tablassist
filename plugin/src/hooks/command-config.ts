@@ -3,6 +3,13 @@ import type { Config } from "@opencode-ai/sdk"
 type CommandDef = NonNullable<Config["command"]>[string]
 
 const COMMANDS: Record<string, CommandDef> = {
+  audit: {
+    template:
+      "Deeply audit the Tablassert YAML configuration file at path: {args}. First validate the full config with validate-config-file. If validation fails, delegate structural and schema repair to the-builder and preserve valid existing structure. Once the file validates, inspect the config's source, statement, qualifiers, annotations, and provenance, then delegate compact evidence gathering to the-extractor using small data previews and publication/source context as needed. Review subject/object fit, predicate choice, likely missing qualifiers, taxon or category hints, annotation quality, provenance completeness, and whether template-versus-sections structure is appropriate. Report findings in two groups: fixed automatically and recommended changes. Do not apply semantic or scientific edits without explicit user approval.",
+    description: "Deeply audit a Tablassert YAML config",
+    agent: "the-configurator",
+    subtask: true,
+  },
   validate: {
     template:
       "Validate the Tablassert YAML configuration file at path: {args}. Use the validate-config-file tool. Report whether validation passed or failed, and list any errors.",

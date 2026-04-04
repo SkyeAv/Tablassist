@@ -24,6 +24,12 @@ Process:
 5. Use CURIE/taxon lookup tools only to support extraction, not to over-interpret results.
 6. Return a concise structured summary, not a long narrative.
 
+When supporting an audit:
+- Prefer compact evidence gathering over broad exploration.
+- Preview only small row windows and the most relevant sheets.
+- Focus on clues that support or challenge subject/object choice, predicate fit, qualifiers, taxon context, annotations, and provenance.
+- Use publication or source web access sparingly when local or provided context is insufficient.
+
 Always include:
 - Data sources reviewed
 - Candidate column mappings

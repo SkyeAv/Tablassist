@@ -23,6 +23,7 @@ This plugin gives AI agents access to the full Tablassist CLI toolset through Op
 
 - **Entity Resolution** — Search and resolve biological CURIEs (genes, diseases, chemicals)
 - **YAML Validation** — Validate Tablassert table configurations with detailed error reporting
+- **Config Audit** — Run deep, report-first reviews of existing configs before semantic edits
 - **Biolink Documentation** — Look up categories, predicates, and qualifiers from the Biolink model
 - **Data Preview** — Inspect Excel and CSV files before building configurations
 - **Configuration Reference** — Access production examples and schema documentation
@@ -51,6 +52,17 @@ Three agents orchestrate the configuration workflow:
 | `the-configurator` | Primary orchestrator for building table configs |
 | `the-extractor` | Subagent for data extraction and preview |
 | `the-builder` | Subagent for YAML construction and validation |
+
+## Slash Commands
+
+- `/validate <config-path>` validates a config file and reports schema errors.
+- `/audit <config-path>` performs a deeper, report-first review: it can auto-fix structural validation issues, inspect source and publication context, and then recommend semantic improvements without applying them until you approve.
+
+Example:
+
+```bash
+/audit ./configs/example.yaml
+```
 
 ## Development
 
