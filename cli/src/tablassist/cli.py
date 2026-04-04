@@ -26,6 +26,23 @@ from tablassist.utils import (
 CLI: App = App()
 
 
+DOCLING_SCRIPT: Path = Path(__file__).with_name("docling_extract.py")
+
+
+def run_semantic_extractor(
+    file: Path, output_format: Literal["markdown", "text"] = "markdown", ocr: Literal["auto", "off", "on"] = "auto"
+) -> str:
+    """Run Docling extraction in an isolated uv-managed script environment."""
+    cmd: list[str] = ["uv", "run", str(DOCLING_SCRIPT), str(file), output_format, ocr]
+    result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        error: str = result.stderr.strip() or result.stdout.strip() or "Docling extraction failed"
+        return f"ERROR | {error}"
+
+    return result.stdout
+
+
 @CLI.command
 def docs_table_config() -> str:
     """Fetch Tablassert table configuration spec documentation."""
@@ -242,12 +259,20 @@ def docs_qualifier(qualifier: str) -> str:
 @CLI.command
 def extract_text(file: Path, extension: Optional[str] = None) -> str:
     """Extract text from a file using textract (PDF, DOCX, etc.)."""
-    if file.suffix == "pdf":
+    if file.suffix.lower() == ".pdf":
         return textract.process(file, method="pdfminer")
     elif extension:
         return textract.process(file, extension=extension)
     else:
         return textract.process(file)
+
+
+@CLI.command
+def extract_text_semantic(
+    file: Path, output_format: Literal["markdown", "text"] = "markdown", ocr: Literal["auto", "off", "on"] = "auto"
+) -> str:
+    """Extract semantic text with Docling as Markdown or plain text."""
+    return run_semantic_extractor(file=file, output_format=output_format, ocr=ocr)
 
 
 @CLI.command

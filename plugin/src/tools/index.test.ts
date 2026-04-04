@@ -13,6 +13,7 @@ describe("createAllTools", () => {
       "download-pmc-tar",
       "excel-sheets",
       "extract-text",
+      "extract-text-semantic",
       "get-curie-info",
       "list-categories",
       "list-predicates",

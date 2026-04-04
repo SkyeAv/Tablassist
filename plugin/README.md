@@ -26,9 +26,17 @@ This plugin gives AI agents access to the full Tablassist CLI toolset through Op
 - **Config Audit** — Run deep, report-first reviews of existing configs before semantic edits
 - **Biolink Documentation** — Look up categories, predicates, and qualifiers from the Biolink model
 - **Data Preview** — Inspect Excel and CSV files before building configurations
+- **Dual Text Extraction** — Use fast raw Textract extraction or richer semantic Docling extraction depending on the source
 - **Configuration Reference** — Access production examples and schema documentation
 
 Full config validation expects `template:` as the top-level YAML key, with optional `sections:`. The standalone `validate-section-str` tool is only for checking an individual merged section shape.
+
+Document extraction tools:
+
+- `extract-text` for fast raw text extraction from PDFs, DOCX, and similar files
+- `extract-text-semantic` for richer Markdown or plain-text extraction with `ocr=auto` by default
+
+The semantic extractor uses an isolated Docling `uv run` script on the CLI side so the plugin can expose richer extraction without requiring Docling to coexist in the main CLI dependency set.
 
 ## Architecture
 

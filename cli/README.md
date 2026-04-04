@@ -6,6 +6,11 @@
 
 Python CLI tool for AI-assisted [Tablassert](https://github.com/SkyeAv/Tablassert) table configuration generation — entity resolution, YAML validation, and Biolink documentation lookup.
 
+Tablassist ships with two document extraction modes:
+
+- `extract-text` for fast raw extraction via Textract
+- `extract-text-semantic` for richer Docling-backed semantic extraction with Markdown output and `ocr=auto` by default
+
 ## Installation
 
 ```bash
@@ -98,7 +103,25 @@ tablassist preview-csv data.csv 10
 
 # Extract text from a document (PDF, DOCX, etc.)
 tablassist extract-text document.pdf
+
+# Extract semantic Markdown from a document with Docling
+tablassist extract-text-semantic document.pdf
+
+# Extract plain text and explicitly disable OCR
+tablassist extract-text-semantic document.pdf text off
 ```
+
+`extract-text` is optimized for fast, low-overhead text grabs.
+
+`extract-text-semantic` runs IBM Docling in an isolated `uv run` script environment so Tablassist can offer richer extraction without introducing a dependency conflict into the main CLI environment. It is the better choice when reading order, headings, lists, or table-aware Markdown matter more than raw speed.
+
+Arguments for `extract-text-semantic`:
+
+- `file` — local document path
+- `output_format` — `markdown` (default) or `text`
+- `ocr` — `auto` (default), `off`, or `on`
+
+Use `ocr=auto` for the default balance. Use `ocr=on` for scans and image-heavy PDFs, and `ocr=off` when you know the source is born-digital and want the lightest path.
 
 ### PMC Archive Download
 
@@ -115,7 +138,7 @@ uv run ruff check .                  # lint
 uv run ruff check --fix .            # lint with auto-fix
 uv run ruff format .                 # format
 uv run pyright                       # type check
-uv run pytest                        # run all tests
+uv run --group dev python -m pytest  # run all tests
 ```
 
 ## License

@@ -13,6 +13,22 @@ export function createFileTools(cli: CliRunner) {
       (args: { file: string; extension?: string }) =>
         cli("extract-text", [args.file, ...(args.extension ? [args.extension] : [])]),
     ),
+    "extract-text-semantic": createCliTool(
+      "Extract structured semantic text from documents",
+      {
+        file: z.string(),
+        output_format: z.enum(["markdown", "text"]).optional(),
+        ocr: z.enum(["auto", "off", "on"]).optional(),
+      },
+      (args: { file: string; output_format?: "markdown" | "text"; ocr?: "auto" | "off" | "on" }) => {
+        const outputFormat = args.output_format ?? (args.ocr ? "markdown" : undefined)
+        return cli("extract-text-semantic", [
+          args.file,
+          ...(outputFormat ? [outputFormat] : []),
+          ...(args.ocr ? [args.ocr] : []),
+        ])
+      },
+    ),
     "excel-sheets": createCliTool("List sheet names in an Excel file", { file: z.string() }, (args: { file: string }) =>
       cli("excel-sheets", [args.file]),
     ),

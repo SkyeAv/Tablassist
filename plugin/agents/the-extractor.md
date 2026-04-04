@@ -18,11 +18,12 @@ Primary goals:
 
 Process:
 1. Decide the smallest useful chunk to inspect next: one table, one supplement, one figure legend, one section, or one spreadsheet sheet.
-2. Use `extract-text` for PDFs and documents.
-3. Use `excel-sheets`, `preview-excel`, and `preview-csv` for tabular sources.
-4. Use `download-pmc-tar` when the task provides a PMC identifier and local files are not already available.
-5. Use CURIE/taxon lookup tools only to support extraction, not to over-interpret results.
-6. Return a concise structured summary, not a long narrative.
+2. Use `extract-text` for fast raw document extraction when structure is not important.
+3. Use `extract-text-semantic` when reading order, headings, lists, table-aware Markdown, or OCR-aware extraction would materially help.
+4. Use `excel-sheets`, `preview-excel`, and `preview-csv` for tabular sources.
+5. Use `download-pmc-tar` when the task provides a PMC identifier and local files are not already available.
+6. Use CURIE/taxon lookup tools only to support extraction, not to over-interpret results.
+7. Return a concise structured summary, not a long narrative.
 
 When supporting an audit:
 - Prefer compact evidence gathering over broad exploration.

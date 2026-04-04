@@ -1,6 +1,16 @@
 from pathlib import Path
+from typing import Any
 
-from tablassist.cli import list_categories, preview_csv, validate_config_file, validate_config_str, validate_section_str
+import tablassist.cli as cli
+from tablassist.cli import (
+    extract_text_semantic,
+    list_categories,
+    preview_csv,
+    run_semantic_extractor,
+    validate_config_file,
+    validate_config_str,
+    validate_section_str,
+)
 
 
 FIXTURES_DIR: Path = Path(__file__).parent / "fixtures"
@@ -83,3 +93,53 @@ def test_validate_config_file_accepts_valid_fixture() -> None:
 
     assert isinstance(result, list)
     assert result[0]["status"] == "ok"
+
+
+def test_run_semantic_extractor_builds_uv_command(monkeypatch: Any) -> None:
+    expected_file = FIXTURES_DIR / "preview.csv"
+    calls: list[list[str]] = []
+
+    class FakeCompletedProcess:
+        returncode = 0
+        stdout = "# structured"
+        stderr = ""
+
+    def fake_run(cmd: list[str], capture_output: bool, text: bool) -> FakeCompletedProcess:
+        assert capture_output is True
+        assert text is True
+        calls.append(cmd)
+        return FakeCompletedProcess()
+
+    monkeypatch.setattr(cli.subprocess, "run", fake_run)
+
+    result = run_semantic_extractor(expected_file, output_format="text", ocr="off")
+
+    assert result == "# structured"
+    assert calls == [["uv", "run", str(cli.DOCLING_SCRIPT), str(expected_file), "text", "off"]]
+
+
+def test_run_semantic_extractor_returns_error_output(monkeypatch: Any) -> None:
+    class FakeCompletedProcess:
+        returncode = 1
+        stdout = ""
+        stderr = "missing docling"
+
+    monkeypatch.setattr(cli.subprocess, "run", lambda *args, **kwargs: FakeCompletedProcess())
+
+    result = run_semantic_extractor(FIXTURES_DIR / "preview.csv")
+
+    assert result == "ERROR | missing docling"
+
+
+def test_extract_text_semantic_delegates_to_runner(monkeypatch: Any) -> None:
+    expected_file = FIXTURES_DIR / "preview.csv"
+
+    def fake_runner(file: Path, output_format: str = "markdown", ocr: str = "auto") -> str:
+        assert file == expected_file
+        assert output_format == "text"
+        assert ocr == "on"
+        return "plain text"
+
+    monkeypatch.setattr(cli, "run_semantic_extractor", fake_runner)
+
+    assert extract_text_semantic(expected_file, output_format="text", ocr="on") == "plain text"

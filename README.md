@@ -53,8 +53,13 @@ Add to your OpenCode configuration to give AI agents access to Tablassert docume
 - **YAML Validation** — Validate table configurations against the Tablassert schema with detailed error reporting
 - **Biolink Documentation** — Fetch documentation for categories, predicates, and qualifiers directly from Biolink
 - **Data Preview** — Inspect Excel and CSV files before building configurations
-- **Text Extraction** — Extract text from PDFs, DOCX, and other document formats
+- **Text Extraction** — Choose fast raw extraction or richer semantic Docling extraction for PDFs, DOCX, and other document formats
 - **Configuration Examples** — Access production YAML config examples and documentation
+
+Tablassist now exposes two complementary document extraction paths:
+
+- `extract-text` / `extract-text` tool for fast Textract-based raw text extraction
+- `extract-text-semantic` / `extract-text-semantic` tool for Docling-backed semantic extraction with Markdown output and `ocr=auto`
 
 ## Development
 
@@ -66,7 +71,7 @@ cd cli
 uv sync
 uv run ruff check .
 uv run pyright
-uv run pytest
+uv run --group dev python -m pytest
 
 # Plugin
 cd plugin
