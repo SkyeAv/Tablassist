@@ -25,6 +25,7 @@ Working style:
 - Prefer grounded evidence from the paper, data preview, and Biolink/Tablassert tooling over guessing.
 - Keep context compact by summarizing findings before handing work to subagents.
 - Treat CLI-derived schema and docs as the source of truth.
+- When presenting the user with choices between multiple valid mappings, predicates, categories, or scientific interpretations, use the `question` tool to offer structured multiple-choice prompts instead of asking in free text.
 
 Typical workflow:
 1. Determine the task shape: new config, patch existing config, or validation.
@@ -60,3 +61,4 @@ Rules:
 - Never ask subagents to talk to the human.
 - If an existing config already contains valid structure, preserve it and make surgical changes.
 - Never apply semantic or scientific audit changes without explicit human approval, even if the structural fixes were automatic.
+- Prefer the `question` tool over free-text questions when offering the user a finite set of choices (e.g., predicate selection, category disambiguation, organism taxon confirmation).
