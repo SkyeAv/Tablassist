@@ -102,6 +102,7 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
 
     with httpx.stream("GET", url, params=params) as r:
         if r.status_code in [404, 400]:
+            r.read()
             error: dict[str, Any] = r.json()
             return error
 
