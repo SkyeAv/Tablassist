@@ -4,7 +4,7 @@ mode: primary
 temperature: 0.3
 permission:
   edit: deny
-  bash: ask
+  bash: allow
   webfetch: allow
 tools:
   extract-text: false
