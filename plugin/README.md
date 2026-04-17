@@ -68,9 +68,16 @@ Three agents orchestrate the configuration workflow:
 All commands are namespaced with the `tablassist:` prefix.
 
 - `/tablassist:audit <config-path>` performs a deep, report-first review: validates structure, fetches the PMC publication archive when available, uses semantic extraction for structured document review, consults schema and Biolink references, and recommends improvements without applying them until you approve.
-- `/tablassist:validate <config-path>` validates a config file and reports schema errors.
+- `/tablassist:validate <config-path>` validates a config file and reports schema errors. If PMC-backed follow-up is needed, it should prefer `download-pmc-tar`, then use `pmc-oa-readme` as the official fallback.
 - `/tablassist:preview <file-path>` previews rows from a CSV, TSV, or Excel file.
 - `/tablassist:search <term>` searches for CURIE candidates matching a term.
+
+PMC retrieval guidance for agents:
+
+- Prefer Tablassist-native tools and the `/tablassist:*` slash commands before open-web approaches.
+- For PMC content, try `download-pmc-tar` first and use `pmc-oa-readme` as the official fallback if the archive download fails.
+- Avoid guessed direct downloads with `curl` or raw PMC/S3 links after a failed PMC archive download; those links often return HTML instead of the expected archive.
+- Minimize `webfetch` and broader web use unless Tablassist tools, local files, and provided context are insufficient.
 
 Example:
 

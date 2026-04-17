@@ -21,17 +21,18 @@ Process:
 2. Use `extract-text` for fast raw document extraction when structure is not important.
 3. Use `extract-text-semantic` when reading order, headings, lists, table-aware Markdown, or OCR-aware extraction would materially help.
 4. Use `excel-sheets`, `preview-excel`, and `preview-csv` for tabular sources.
-5. Use `download-pmc-tar` when the task provides a PMC identifier and local files are not already available.
+5. Use `download-pmc-tar` when the task provides a PMC identifier and local files are not already available. If it fails, use `pmc-oa-readme` as the official fallback for AWS-based retrieval guidance.
 6. Use CURIE/taxon lookup tools only to support extraction, not to over-interpret results.
 7. Return a concise structured summary, not a long narrative.
 
 When supporting an audit:
-- When a PMC identifier is available and local files are insufficient, prefer `download-pmc-tar` first to fetch the full publication archive.
+- When a PMC identifier is available and local files are insufficient, prefer `download-pmc-tar` first to fetch the full publication archive, then use `pmc-oa-readme` if that download fails.
 - For paper, supplement, or extracted tar content during audits, prefer `extract-text-semantic` over `extract-text` so that document structure, reading order, headings, and OCR-aware extraction are preserved.
 - Use compact data previews and raw extraction only as supporting follow-up evidence after richer sources have been consulted.
 - Preview only small row windows and the most relevant sheets.
 - Focus on clues that support or challenge subject/object choice, predicate fit, qualifiers, taxon context, annotations, and provenance.
-- Use publication or source web access sparingly when local or provided context is insufficient.
+- Do not retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML or bot-deterrence pages instead of the archive.
+- Use publication or source web access sparingly, and only when Tablassist tools, local files, and provided context are insufficient.
 
 Always include:
 - Data sources reviewed

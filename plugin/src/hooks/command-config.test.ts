@@ -58,6 +58,17 @@ describe("createCommandConfigHook", () => {
     expect(template).toContain("prioritize")
   })
 
+  it("tablassist:audit template uses pmc-oa-readme as fallback and minimizes web use", async () => {
+    const hook = createCommandConfigHook()
+    const config: Config = {}
+    await hook(config)
+    const template: string = config.command?.["tablassist:audit"]?.template ?? ""
+
+    expect(template).toContain("pmc-oa-readme")
+    expect(template).toContain("curl")
+    expect(template).toContain("Keep webfetch and broader web use minimal")
+  })
+
   it("tablassist:audit template prefers extract-text-semantic", async () => {
     const hook = createCommandConfigHook()
     const config: Config = {}
@@ -109,6 +120,18 @@ describe("createCommandConfigHook", () => {
       agent: "the-extractor",
       subtask: true,
     })
+  })
+
+  it("tablassist:validate template uses pmc fallback guidance", async () => {
+    const hook = createCommandConfigHook()
+    const config: Config = {}
+    await hook(config)
+    const template: string = config.command?.["tablassist:validate"]?.template ?? ""
+
+    expect(template).toContain("validate-config-file")
+    expect(template).toContain("pmc-oa-readme")
+    expect(template).toContain("curl")
+    expect(template).toContain("Minimize webfetch and broader web use")
   })
 
   it("does not register unprefixed command keys", async () => {
