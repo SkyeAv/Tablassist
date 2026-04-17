@@ -32,5 +32,10 @@ export function createApiTools(cli: CliRunner) {
       { organism_name: z.string() },
       (args: { organism_name: string }) => cli("resolve-taxon-id", [args.organism_name]),
     ),
+    "pmc-oa-readme": createCliTool(
+      "Fetch the PMC Open Access dataset README with download instructions and file format details",
+      {},
+      () => cli("pmc-oa-readme", []),
+    ),
   }
 }

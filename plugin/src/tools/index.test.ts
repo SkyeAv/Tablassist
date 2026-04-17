@@ -18,6 +18,7 @@ describe("createAllTools", () => {
       "list-categories",
       "list-predicates",
       "list-qualifiers",
+      "pmc-oa-readme",
       "preview-csv",
       "preview-excel",
       "resolve-taxon-id",

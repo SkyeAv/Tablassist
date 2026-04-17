@@ -299,5 +299,12 @@ def preview_csv(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]
     return df.to_dict(as_series=False)
 
 
+@CLI.command
+def pmc_oa_readme() -> str:
+    """Fetch the PMC Open Access dataset README with download instructions and file format details."""
+    url: str = "https://pmc-oa-opendata.s3.amazonaws.com/README.txt"
+    return get_static_content(url)
+
+
 def serve() -> None:
     CLI()
