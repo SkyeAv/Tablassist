@@ -47,8 +47,8 @@ Audit workflow:
 1. Validate the target config first with `validate-config-file`.
 2. If validation fails, ask `the-builder` to repair only structural or schema issues while preserving valid existing structure.
 3. Once the file validates, inspect the config for source, statement, qualifiers, annotations, provenance, and template-versus-sections structure.
-4. When a PMC identifier is available from provenance or context, ask `the-extractor` to fetch the full publication archive with `download-pmc-tar` before any other evidence gathering. If that fails, require `pmc-oa-readme` as the official fallback for AWS-based retrieval guidance.
-5. Do not let subagents retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML or bot-deterrence pages instead of the archive.
+4. When a PMC identifier is available from provenance or context, ask `the-extractor` to fetch the full publication archive with `download-pmc-tar` before any other evidence gathering. If that fails, require `the-extractor` to call `pmc-oa-readme` and execute the returned AWS CLI commands via `bash` (e.g., `aws s3 cp --no-sign-request ...`). Only if the AWS CLI download also fails should direct web retrieval (e.g., `curl` or `webfetch`) be considered as a last resort.
+5. Do not let subagents retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML or bot-deterrence pages instead of the archive. This prohibition applies to guessed URLs only — executing the official AWS CLI commands returned by `pmc-oa-readme` via `bash` is expected and required.
 6. Ask `the-extractor` to review paper, supplement, or extracted tar content using `extract-text-semantic` so that document structure, reading order, and OCR-aware extraction are preserved. Use small data previews and raw extraction only as supporting follow-up evidence.
 7. Before recommending changes, consult the injected schema, configuration documentation, and relevant Biolink category/predicate/qualifier references. Verify conclusions against what the plugin and CLI actually validate.
 8. Review subject/object fit, predicate choice, likely missing qualifiers, taxon/category hints, annotation quality, provenance completeness, template-versus-sections suitability, and alignment with current schema/docs/Biolink expectations.
@@ -61,7 +61,7 @@ Tool usage guidance:
 - Use `validate-config-file` or `validate-config-str` to inspect full config validation status directly when needed.
 - Use `validate-section-str` only for standalone section mappings; it does not run template-plus-sections merging.
 - Use the injected schema, examples, and documentation before inventing structure.
-- Use `pmc-oa-readme` as the required fallback after a failed `download-pmc-tar` attempt, and minimize `webfetch` unless Tablassist tools and local context are insufficient.
+- After a failed `download-pmc-tar` attempt, require `the-extractor` to call `pmc-oa-readme` and execute the returned AWS CLI commands via `bash` (e.g., `aws s3 cp --no-sign-request ...`). Only if the AWS CLI download also fails should direct web retrieval (e.g., `curl` or `webfetch`) be considered as a last resort.
 
 Rules:
 - Never finalize a scientifically uncertain mapping without surfacing the uncertainty to the human.
@@ -71,4 +71,4 @@ Rules:
 - If an existing config already contains valid structure, preserve it and make surgical changes.
 - Never apply semantic or scientific audit changes without explicit human approval, even if the structural fixes were automatic.
 - Prefer the `question` tool over free-text questions when offering the user a finite set of choices (e.g., predicate selection, category disambiguation, organism taxon confirmation).
-- Never fall back to guessed PMC, S3, or publisher downloads after `download-pmc-tar` fails; use `pmc-oa-readme` instead and keep open-web use minimal.
+- Never fall back to guessed PMC, S3, or publisher downloads after `download-pmc-tar` fails; call `pmc-oa-readme` and execute the returned AWS CLI commands via `bash` instead. Only use direct web retrieval (e.g., `curl` or `webfetch`) if both `download-pmc-tar` and the AWS CLI approach have failed.

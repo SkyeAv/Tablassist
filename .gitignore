@@ -3,6 +3,7 @@
 *plans/
 *docs/
 *specs/
+*.claude/
 
 # Ruff Cache
 *.ruff_cache/

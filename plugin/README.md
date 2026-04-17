@@ -74,10 +74,12 @@ All commands are namespaced with the `tablassist:` prefix.
 
 PMC retrieval guidance for agents:
 
-- Prefer Tablassist-native tools and the `/tablassist:*` slash commands before open-web approaches.
-- For PMC content, try `download-pmc-tar` first and use `pmc-oa-readme` as the official fallback if the archive download fails.
-- Avoid guessed direct downloads with `curl` or raw PMC/S3 links after a failed PMC archive download; those links often return HTML instead of the expected archive.
-- Minimize `webfetch` and broader web use unless Tablassist tools, local files, and provided context are insufficient.
+1. Prefer Tablassist-native tools and the `/tablassist:*` slash commands before open-web approaches.
+2. For PMC content, follow the three-step retrieval chain:
+   1. Try `download-pmc-tar` first.
+   2. If that fails, call `pmc-oa-readme` to obtain the AWS CLI commands, then execute them via `bash` (e.g., `aws s3 cp --no-sign-request ...`).
+   3. Only if both steps above fail, fall back to direct web retrieval (e.g., `curl` or `webfetch`) as a last resort.
+3. Do not retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML instead of the expected archive. This prohibition applies to guessed URLs only — executing the official AWS CLI commands returned by `pmc-oa-readme` via `bash` is expected and required.
 
 Example:
 

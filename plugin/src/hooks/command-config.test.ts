@@ -58,15 +58,19 @@ describe("createCommandConfigHook", () => {
     expect(template).toContain("prioritize")
   })
 
-  it("tablassist:audit template uses pmc-oa-readme as fallback and minimizes web use", async () => {
+  it("tablassist:audit template requires pmc-oa-readme with AWS CLI execution before direct web retrieval", async () => {
     const hook = createCommandConfigHook()
     const config: Config = {}
     await hook(config)
     const template: string = config.command?.["tablassist:audit"]?.template ?? ""
 
     expect(template).toContain("pmc-oa-readme")
-    expect(template).toContain("curl")
-    expect(template).toContain("Keep webfetch and broader web use minimal")
+    expect(template).toContain("execute")
+    expect(template).toContain("AWS CLI")
+    expect(template).toContain("bash")
+    expect(template).toContain("aws s3 cp --no-sign-request")
+    expect(template).toContain("Only if the AWS CLI download also fails")
+    expect(template).toContain("direct web retrieval")
   })
 
   it("tablassist:audit template prefers extract-text-semantic", async () => {
@@ -122,7 +126,7 @@ describe("createCommandConfigHook", () => {
     })
   })
 
-  it("tablassist:validate template uses pmc fallback guidance", async () => {
+  it("tablassist:validate template requires three-step PMC retrieval chain", async () => {
     const hook = createCommandConfigHook()
     const config: Config = {}
     await hook(config)
@@ -130,8 +134,11 @@ describe("createCommandConfigHook", () => {
 
     expect(template).toContain("validate-config-file")
     expect(template).toContain("pmc-oa-readme")
-    expect(template).toContain("curl")
-    expect(template).toContain("Minimize webfetch and broader web use")
+    expect(template).toContain("execute")
+    expect(template).toContain("AWS CLI")
+    expect(template).toContain("bash")
+    expect(template).toContain("Only if the AWS CLI download also fails")
+    expect(template).toContain("direct web retrieval")
   })
 
   it("does not register unprefixed command keys", async () => {
