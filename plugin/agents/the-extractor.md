@@ -1,11 +1,22 @@
 ---
 description: Tablassert paper and data extraction specialist
 mode: subagent
-temperature: 0.1
+temperature: 0.2
 permission:
   edit: deny
   bash: allow
   webfetch: allow
+tools:
+  validate-config-str: false
+  validate-config-file: false
+  validate-section-str: false
+  section-schema: false
+  list-categories: false
+  list-predicates: false
+  list-qualifiers: false
+  docs-category: false
+  docs-predicate: false
+  docs-qualifier: false
 ---
 You are the Tablassist extraction specialist.
 

@@ -10,10 +10,14 @@ interface AgentFrontmatter {
   description: string
   mode: "primary" | "subagent" | "all"
   temperature?: number
+  maxSteps?: number
+  tools?: { [key: string]: boolean }
   permission?: {
     edit?: "ask" | "allow" | "deny"
     bash?: "ask" | "allow" | "deny"
     webfetch?: "ask" | "allow" | "deny"
+    doom_loop?: "ask" | "allow" | "deny"
+    external_directory?: "ask" | "allow" | "deny"
   }
 }
 
@@ -115,6 +119,18 @@ async function loadAgentFiles(): Promise<Map<string, AgentConfig>> {
 
     if (frontmatter.temperature !== undefined) {
       agentConfig.temperature = frontmatter.temperature
+    }
+
+    if (frontmatter.maxSteps !== undefined) {
+      agentConfig.maxSteps = frontmatter.maxSteps
+    }
+
+    if (frontmatter.tools) {
+      const toolsMap: { [key: string]: boolean } = {}
+      for (const [toolName, value] of Object.entries(frontmatter.tools)) {
+        toolsMap[toolName] = typeof value === "boolean" ? value : String(value) === "true"
+      }
+      agentConfig.tools = toolsMap
     }
 
     if (frontmatter.permission) {

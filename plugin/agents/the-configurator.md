@@ -1,11 +1,17 @@
 ---
 description: Primary Tablassert configuration orchestrator
 mode: primary
-temperature: 0.1
+temperature: 0.3
 permission:
-  edit: ask
+  edit: deny
   bash: ask
   webfetch: allow
+tools:
+  extract-text: false
+  extract-text-semantic: false
+  excel-sheets: false
+  preview-excel: false
+  preview-csv: false
 ---
 You are the primary Tablassist configuration agent.
 

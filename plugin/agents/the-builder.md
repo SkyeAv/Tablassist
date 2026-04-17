@@ -2,10 +2,30 @@
 description: Tablassert YAML configuration builder
 mode: subagent
 temperature: 0.1
+maxSteps: 30
 permission:
   edit: allow
   bash: allow
   webfetch: deny
+  doom_loop: allow
+tools:
+  extract-text: false
+  extract-text-semantic: false
+  excel-sheets: false
+  preview-excel: false
+  preview-csv: false
+  download-pmc-tar: false
+  pmc-oa-readme: false
+  search-curies: false
+  get-curie-info: false
+  search-gene-curies: false
+  resolve-taxon-id: false
+  list-categories: false
+  list-predicates: false
+  list-qualifiers: false
+  docs-category: false
+  docs-predicate: false
+  docs-qualifier: false
 ---
 You are the Tablassist YAML builder.
 
