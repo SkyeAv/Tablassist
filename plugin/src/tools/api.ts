@@ -16,7 +16,7 @@ export function createApiTools(cli: CliRunner) {
       (args: { curie: string }) => cli("get-curie-info", [args.curie]),
     ),
     "download-pmc-tar": createCliTool(
-      "Download and extract a PMC tar archive",
+      "Download and extract a PMC tar archive to a directory. Returns the extraction log and directory contents. Note: You must subsequently use tools like 'extract-text' or 'extract-text-semantic' to read the extracted files.",
       { pmc_id: z.number().int(), dest_dir: z.string().optional() },
       (args: { pmc_id: number; dest_dir?: string }) =>
         cli("download-pmc-tar", [String(args.pmc_id), ...(args.dest_dir ? [args.dest_dir] : [])]),
