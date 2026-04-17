@@ -1,6 +1,6 @@
 [project]
 name = "tablassist"
-version = "0.2.4"
+version = "0.2.5"
 description = "AI-assisted table configuration generation for Tablassert — entity resolution, YAML validation, and Biolink documentation lookup."
 authors = [
     { name = "Skye Lane Goetz", email = "sgoetz@isbscience.org" },

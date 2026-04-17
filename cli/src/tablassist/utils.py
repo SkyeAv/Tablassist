@@ -29,11 +29,14 @@ def get_json_response(url: str, params: Optional[dict[str, Any]] = None) -> Unio
     return r.json()
 
 
+def get_html_as_markdown(url: str) -> str:
+    html: str = get_static_content(url)
+    return trafilatura.extract(html, output_format="markdown") or ""
+
+
 def get_biolink_html_documentation(biolink_thing: str) -> str:
     url: str = f"https://raw.githubusercontent.com/biolink/biolink-model/gh-pages/{quote(biolink_thing)}/index.html"
-    html: str = get_static_content(url)
-
-    return trafilatura.extract(html, output_format="markdown") or ""
+    return get_html_as_markdown(url)
 
 
 def validate_section(s: dict[str, Any]) -> dict[str, Any]:

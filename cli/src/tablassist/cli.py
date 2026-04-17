@@ -17,6 +17,7 @@ from tablassert.models import Section
 from tablassist.utils import (
     build_semantic_converter,
     get_biolink_html_documentation,
+    get_html_as_markdown,
     get_json_response,
     get_static_content,
     parse_yaml_string,
@@ -302,8 +303,8 @@ def preview_csv(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]
 @CLI.command
 def pmc_oa_readme() -> str:
     """Fetch the PMC Open Access dataset README with download instructions and file format details."""
-    url: str = "https://pmc-oa-opendata.s3.amazonaws.com/README.txt"
-    return get_static_content(url)
+    url: str = "https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/"
+    return get_html_as_markdown(url)
 
 
 def serve() -> None:
