@@ -115,7 +115,7 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
             for chunk in r.iter_bytes():
                 f.write(chunk)
 
-    cmd: str = f"tar -xvf '{p}' && ls -lh '{dest_dir}'"
+    cmd: str = f"tar -xvf '{p}' && rm '{p}' && ls -lh '{dest_dir}'"
     r: Any = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
     return {"status": "ok", "stdout": r.stdout, "stderr": r.stderr}
