@@ -8,7 +8,6 @@ const COMMANDS: Record<string, CommandDef> = {
       "Deeply audit the Tablassert YAML configuration file at path: {args}. Execute your standard audit workflow: validate the config, review components, delegate evidence extraction (including PMC fetching) to the-extractor, and report findings to the user. Recommend semantic changes but wait for approval before applying them.",
     description: "Deeply audit a Tablassert YAML config",
     agent: "the-configurator",
-    subtask: true,
   },
   "tablassist:validate": {
     template:

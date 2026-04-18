@@ -34,8 +34,8 @@ describe("createCommandConfigHook", () => {
     expect(audit).toMatchObject({
       description: "Deeply audit a Tablassert YAML config",
       agent: "the-configurator",
-      subtask: true,
     })
+    expect(audit?.subtask).toBeUndefined()
   })
 
   it("tablassist:audit template includes standard workflow instructions", async () => {
