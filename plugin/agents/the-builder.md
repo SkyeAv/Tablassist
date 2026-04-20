@@ -34,7 +34,7 @@ Your job is to write and update TC3 Tablassert table configuration files that va
 ## Core Rules
 - Use the injected schema and examples as the primary reference. Do not invent scientific facts.
 - **Top-Level Structure**: Every config file MUST use `template:` as a top-level key, with optional `sections:`. Never write a bare section mapping directly as the full file.
-- **Preservation**: Preserve valid existing structure when editing old configs.
+- **Preservation**: Preserve valid existing structure when editing old configs. In particular, preserve extraction strategy fields (`regex`, `remove`, `prefix`, `suffix`, `explode_by`, `taxon`, `prioritize`, `avoid`) unless explicitly told to change them.
 - **Completeness**: Ensure provenance fields are complete based on provided information. Use annotations/qualifiers only when evidence supports them.
 
 ## Validation Loop

@@ -4,30 +4,33 @@ type CommandDef = NonNullable<Config["command"]>[string]
 
 const COMMANDS: Record<string, CommandDef> = {
   "tablassist:audit": {
-    template:
-      "Deeply audit the Tablassert YAML configuration file at path: {args}. Execute your standard audit workflow: validate the config, review components, delegate evidence extraction (including PMC fetching) to the-extractor, and report findings to the user. Recommend semantic changes but wait for approval before applying them.",
+    template: `Audit the Tablassert YAML configuration file at path: {args}
+
+Follow this workflow in order:
+
+1. **Validate structure** — run \`validate-config-file\` on the config. If it fails, note the errors but continue the audit.
+
+2. **Preview source data** — read the config to find the \`source.local\` file path, then use \`preview-csv\` or \`preview-excel\` to inspect the first rows of actual column data.
+
+3. **Evaluate extraction strategy** — for each column mapping, inspect the \`regex\`, \`remove\`, \`prefix\`, \`suffix\`, \`explode_by\`, \`taxon\`, \`prioritize\`, and \`avoid\` fields. Assess whether the transforms will correctly extract clean identifiers from the raw column values you previewed.
+
+4. **Spot-check CURIE resolution** — pick 3–5 representative raw values from the target columns, mentally apply the config's transforms (regex, remove, prefix, etc.), then run \`search-curies\` or \`search-gene-curies\` on the transformed values. Report which resolve and which don't.
+
+5. **Check Biolink alignment** — verify categories, predicates, and qualifiers are appropriate using \`docs-category\` and \`docs-predicate\`. Flag any mismatches.
+
+6. **Report findings** — organize into two sections:
+   - **Structural issues** (schema errors, missing required fields)
+   - **Recommended changes** (extraction strategy improvements, Biolink misalignments, CURIE resolution failures)
+
+   When surfacing Biolink concepts, briefly explain what they mean for non-specialist readers. Never apply semantic changes without explicit human approval.`,
     description: "Deeply audit a Tablassert YAML config",
     agent: "the-configurator",
   },
   "tablassist:validate": {
     template:
-      "Validate the Tablassert YAML configuration file at path: {args}. Use validate-config-file to check the file. Fix any structural or schema errors you encounter, preserving valid existing structure. Report the final validation status and any remaining issues.",
-    description: "Validate a Tablassert YAML config file",
+      "Validate the Tablassert YAML configuration file at path: {args}. Run validate-config-file. Fix any structural or schema errors, preserving valid existing structure. Report pass/fail status and list any remaining issues. Do NOT perform CURIE lookups or semantic review — keep this fast and structural only.",
+    description: "Validate a Tablassert YAML config file (structural only)",
     agent: "the-builder",
-    subtask: true,
-  },
-  "tablassist:preview": {
-    template:
-      "Preview the data file at: {args}. If it is an Excel file (.xlsx, .xls), first list the sheet names using the excel-sheets tool, then preview the first 10 rows of each sheet using the preview-excel tool. If it is a CSV or TSV file, preview the first 10 rows using the preview-csv tool. Present the data clearly.",
-    description: "Preview rows from a CSV, TSV, or Excel file",
-    agent: "the-extractor",
-    subtask: true,
-  },
-  "tablassist:search": {
-    template:
-      "Search for CURIE candidates matching the term: {args}. Use the search-curies tool. Present the results as a concise list showing each candidate's CURIE identifier, name, and category.",
-    description: "Search CURIE candidates by term",
-    agent: "the-extractor",
     subtask: true,
   },
 }
