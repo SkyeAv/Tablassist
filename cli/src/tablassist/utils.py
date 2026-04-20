@@ -14,17 +14,19 @@ if TYPE_CHECKING:
 else:
     docling = Lazy.load("docling")
 
+TIMEOUT: float = 60.0  # seconds
+
 
 def get_static_content(url: str) -> str:
-    r: Any = httpx.get(url)
+    r: Any = httpx.get(url, timeout=TIMEOUT)
     return r.text
 
 
 def get_json_response(url: str, params: Optional[dict[str, Any]] = None) -> Union[list[Any], dict[str, Any]]:
     if params:
-        r: Any = httpx.get(url, params=params)
+        r: Any = httpx.get(url, params=params, timeout=TIMEOUT)
     else:
-        r = httpx.get(url)
+        r = httpx.get(url, timeout=TIMEOUT)
 
     return r.json()
 

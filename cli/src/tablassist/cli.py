@@ -15,6 +15,7 @@ from tablassert.ingests import from_yaml, to_sections
 from tablassert.models import Section
 
 from tablassist.utils import (
+    TIMEOUT,
     build_semantic_converter,
     get_biolink_html_documentation,
     get_html_as_markdown,
@@ -101,7 +102,7 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
 
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
-    with httpx.stream("GET", url, params=params) as r:
+    with httpx.stream("GET", url, params=params, timeout=TIMEOUT) as r:
         if r.status_code in [404, 400]:
             r.read()
             error: dict[str, Any] = r.json()

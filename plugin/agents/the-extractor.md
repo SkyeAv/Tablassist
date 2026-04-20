@@ -43,11 +43,25 @@ Use `resolve-taxon-id` when a taxon constraint is present to verify it resolves.
 
 ## PMC Retrieval & Fallback Workflow
 When fetching publication archives based on a PMC identifier:
-1. **Primary**: Use `download-pmc-tar` to extract the archive to disk, then read the files.
-2. **Fallback**: If `download-pmc-tar` fails, use `pmc-oa-readme` to obtain AWS CLI commands, then execute them via `bash` (e.g., `aws s3 cp --no-sign-request ...`).
-3. **Last Resort**: Use direct web retrieval (`curl` or `webfetch`) ONLY if both steps above fail.
 
-**Never retry guessed PMC, S3, or publisher links with `curl` after a failed archive download** — they often return bot-deterrence HTML.
+### Step 1 — download-pmc-tar (preferred)
+Use `download-pmc-tar` with the numeric PMC ID. If it succeeds, read the extracted files directly.
+
+### Step 2 — AWS S3 via pmc-oa-readme (fallback)
+If Step 1 returns an error (404, 400, or connection failure):
+1. Call `pmc-oa-readme` to get the official PMC Open Access bucket paths.
+2. Construct the `aws s3 cp` command using the bucket path for the PMC ID.
+3. Execute via bash: `aws s3 cp --no-sign-request s3://pmc-oa-opendata/oa_comm/xml/all/PMC<id>.xml ./` (adjust path per the readme).
+4. If S3 returns "fatal error" or "404", the article may not be in the Open Access subset — report this to the caller.
+
+### Step 3 — Report failure
+If both steps fail, **return a failure summary to the primary agent**. Do NOT attempt direct web downloads.
+
+### Hard Rules
+- **Never use `curl`, `wget`, or `webfetch` to download PMC articles or supplements.** These endpoints serve HTML bot-deterrence pages, not files.
+- **Never guess URLs.** Do not construct PMC, S3, or publisher download links from the ID alone — only use paths returned by `pmc-oa-readme` or the `download-pmc-tar` tool.
+- **HTML early-exit:** If any download returns HTML (Content-Type `text/html`, or content starts with `<!DOCTYPE` or `<html`), discard it immediately. Do not read, summarize, or analyze HTML download responses.
+- **No browser workarounds.** Never attempt cookies, tokens, user-agent spoofing, or any authentication workaround for web downloads.
 
 ## Document Extraction
 - For documents where structure matters (headings, tables, OCR), use `extract-text-semantic`.
