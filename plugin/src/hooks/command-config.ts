@@ -10,17 +10,19 @@ Follow this workflow in order:
 
 1. **Validate structure** — run \`validate-config-file\` on the config. If it fails, note the errors but continue the audit.
 
-2. **Preview source data** — read the config to find the \`source.local\` file path, then use \`preview-csv\` or \`preview-excel\` to inspect the first rows of actual column data.
+2. **Acquire source data** — delegate to \`the-extractor\` to download the source file. Do NOT assume \`source.local\` already exists; the extractor runs the full fallback chain (\`download-pmc-tar\` → S3 via \`pmc-oa-readme\` → web retrieval with mirror/API/cookie strategies) and reports the path where the file landed. If the extractor exhausts every strategy, ask the human for a manual download path and hand it back to the extractor.
 
-3. **Evaluate extraction strategy** — for each column mapping, inspect the \`regex\`, \`remove\`, \`prefix\`, \`suffix\`, \`explode_by\`, \`taxon\`, \`prioritize\`, and \`avoid\` fields. Assess whether the transforms will correctly extract clean identifiers from the raw column values you previewed.
+3. **Preview source data** — once the file is in hand, delegate column preview to \`the-extractor\` using the reported path.
 
-4. **Spot-check CURIE resolution** — pick 3–5 representative raw values from the target columns, mentally apply the config's transforms (regex, remove, prefix, etc.), then run \`search-curies\` or \`search-gene-curies\` on the transformed values. Report which resolve and which don't.
+4. **Evaluate extraction strategy** — for each column mapping, inspect the \`regex\`, \`remove\`, \`prefix\`, \`suffix\`, \`explode_by\`, \`taxon\`, \`prioritize\`, and \`avoid\` fields. Assess whether the transforms will correctly extract clean identifiers from the raw column values you previewed.
 
-5. **Check Biolink alignment** — verify categories, predicates, and qualifiers are appropriate using \`docs-category\` and \`docs-predicate\`. Flag any mismatches.
+5. **Spot-check CURIE resolution** — pick 3–5 representative raw values from the target columns, mentally apply the config's transforms (regex, remove, prefix, etc.), then run \`search-curies\` or \`search-gene-curies\` on the transformed values. Report which resolve and which don't.
 
-6. **Report findings** — organize into two sections:
+6. **Check Biolink alignment and qualifier accuracy** — verify categories and predicates with \`docs-category\`, \`docs-predicate\`, and \`list-predicates\`. Then go further on qualifiers: use \`list-qualifiers\` and \`docs-qualifier\` to evaluate whether each statement's qualifier set scientifically represents what the table and paper actually claim. Flag qualifiers that are missing, wrong, or redundant (e.g. needing \`anatomical_context_qualifier\`, \`causal_mechanism_qualifier\`, \`subject_direction_qualifier\`, \`object_aspect_qualifier\`) so the assertion is scientifically accurate.
+
+7. **Report findings** — organize into two sections:
    - **Structural issues** (schema errors, missing required fields)
-   - **Recommended changes** (extraction strategy improvements, Biolink misalignments, CURIE resolution failures)
+   - **Recommended changes** (extraction strategy improvements, Biolink misalignments, CURIE resolution failures, qualifier additions/corrections)
 
    When surfacing Biolink concepts, briefly explain what they mean for non-specialist readers. Never apply semantic changes without explicit human approval.`,
     description: "Deeply audit a Tablassert YAML config",

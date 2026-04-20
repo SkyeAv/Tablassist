@@ -47,6 +47,9 @@ describe("createCommandConfigHook", () => {
     expect(template).toContain("validate-config-file")
     expect(template).toContain("Spot-check CURIE resolution")
     expect(template).toContain("without explicit human approval")
+    expect(template).toContain("qualifier accuracy")
+    expect(template).toContain("manual download path")
+    expect(template).toContain("download-pmc-tar")
   })
 
   it("registers tablassist:validate with correct metadata", async () => {
