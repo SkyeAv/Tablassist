@@ -7,6 +7,7 @@ describe("createAllTools", () => {
     const tools = createAllTools(async (command, args) => `${command}:${args.join(",")}`)
 
     expect(Object.keys(tools).sort()).toEqual([
+      "discovery-ledger",
       "docs-category",
       "docs-predicate",
       "docs-qualifier",
@@ -15,6 +16,7 @@ describe("createAllTools", () => {
       "extract-text",
       "extract-text-semantic",
       "get-curie-info",
+      "get-pmc-summary",
       "list-categories",
       "list-predicates",
       "list-qualifiers",
@@ -24,6 +26,7 @@ describe("createAllTools", () => {
       "resolve-taxon-id",
       "search-curies",
       "search-gene-curies",
+      "search-pmc",
       "section-schema",
       "validate-config-file",
       "validate-config-str",

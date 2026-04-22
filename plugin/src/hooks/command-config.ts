@@ -28,6 +28,21 @@ Follow this workflow in order:
     description: "Deeply audit a Tablassert YAML config",
     agent: "the-configurator",
   },
+  "tablassist:discover": {
+    template: `Begin autonomous paper discovery on the topic: {args}
+
+Run in a continuous loop:
+1. Search for open-access PMC papers with tabular supplementary data on this topic.
+2. For each paper found: download supplements, preview tabular data, create a Tablassert YAML config, and validate it.
+3. Track progress in a discovery ledger (discovery-ledger.json inside the topic output directory).
+4. Continue processing papers until I tell you to stop.
+5. After each paper, briefly report what you did and the result.
+
+Focus on papers with downloadable Excel, CSV, or TSV supplementary files.
+Create output in discovery-{sanitized-topic}/ with per-paper subdirectories.`,
+    description: "Autonomously discover papers and create configs on a topic",
+    agent: "the-pioneer",
+  },
   "tablassist:validate": {
     template:
       "Validate the Tablassert YAML configuration file at path: {args}. Run validate-config-file. Fix any structural or schema errors, preserving valid existing structure. Report pass/fail status and list any remaining issues. Do NOT perform CURIE lookups or semantic review — keep this fast and structural only.",

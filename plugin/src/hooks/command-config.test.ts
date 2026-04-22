@@ -77,6 +77,20 @@ describe("createCommandConfigHook", () => {
     expect(template).toContain("Fix any structural or schema errors")
   })
 
+  it("registers tablassist:discover with the-pioneer", async () => {
+    const hook = createCommandConfigHook()
+    const config: Config = {}
+    await hook(config)
+    const discover = config.command?.["tablassist:discover"]
+
+    expect(discover).toMatchObject({
+      description: "Autonomously discover papers and create configs on a topic",
+      agent: "the-pioneer",
+    })
+    expect(discover?.template).toContain("autonomous paper discovery")
+    expect(discover?.template).toContain("discovery-ledger.json")
+  })
+
   it("does not register unprefixed command keys", async () => {
     const hook = createCommandConfigHook()
     const config: Config = {}
