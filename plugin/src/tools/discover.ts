@@ -8,7 +8,7 @@ const z = tool.schema
 export function createDiscoverTools(cli: CliRunner) {
   return {
     "search-pmc": createCliTool(
-      "Search PMC for open-access articles on a topic. Returns ranked papers with metadata.",
+      "Search PMC for open-access articles on a topic. Returns ranked papers; triage supplements with get-pmc-summary.",
       {
         query: z.string(),
         max_results: z.number().int().positive().default(10),
@@ -31,6 +31,7 @@ export function createDiscoverTools(cli: CliRunner) {
         status: z.string().optional(),
         summary: z.string().optional(),
         topic: z.string().optional(),
+        config_paths: z.array(z.string()).optional(),
         config_path: z.string().optional(),
       },
       (args: {
@@ -40,6 +41,7 @@ export function createDiscoverTools(cli: CliRunner) {
         status?: string
         summary?: string
         topic?: string
+        config_paths?: string[]
         config_path?: string
       }) =>
         cli("discovery-ledger", [
@@ -49,6 +51,7 @@ export function createDiscoverTools(cli: CliRunner) {
           ...(args.status ? ["--status", args.status] : []),
           ...(args.summary ? ["--summary", args.summary] : []),
           ...(args.topic ? ["--topic", args.topic] : []),
+          ...(args.config_paths?.length ? args.config_paths.flatMap((path) => ["--config-paths", path]) : []),
           ...(args.config_path ? ["--config-path", args.config_path] : []),
         ]),
     ),

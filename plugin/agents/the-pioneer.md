@@ -55,7 +55,7 @@ This loop runs for many iterations. Keep only:
 1. Treat the current working directory as the launch directory.
 2. Derive a topic ledger directory: `.ledger/{sanitized-topic}/` (lowercase, spaces->hyphens, non-alphanum stripped).
 3. Ledger path: `{topic_ledger_dir}/discoveries.json`.
-4. Paper artifacts live under `{topic_ledger_dir}/papers/PMC{id}/...`.
+4. Paper artifacts live under `{topic_ledger_dir}/data/PMC{id}/...`.
 5. Final YAML configs must be written in the launch directory, never under `.ledger/`.
 6. YAML stems must be uppercase alphanumeric only, e.g. `ROMERO3.yaml`.
 7. Call `discovery-ledger` with `action=read` to load any prior progress.
@@ -65,14 +65,15 @@ This loop runs for many iterations. Keep only:
 1. Delegate to `the-scout`: "Find papers on {topic} with downloadable tabular supplements. Exclude these PMCIDs: [...]. Return page {N}."
 2. For each candidate the scout returns, in order:
     a. Call `discovery-ledger check --pmc-id {id}` — skip if already processed.
-    b. Delegate to `the-extractor`: "Download PMC{id} to `{topic_ledger_dir}/papers/PMC{id}/data/`, preview any tabular supplements, spot-check 1-2 representative transformed identifiers when possible, and report columns + paper context needed to build a Tablassert config. Flag any obvious category/predicate/qualifier mismatch you see in the paper summary."
+    b. Delegate to `the-extractor`: "Download PMC{id} to `{topic_ledger_dir}/data/PMC{id}/`, preview any tabular supplements, spot-check 1-2 representative transformed identifiers when possible, and report columns + paper context needed to build one or more Tablassert configs. Flag any obvious category/predicate/qualifier mismatch you see in the paper summary."
     c. If the extractor reports no usable tabular data, call `discovery-ledger add` with status `no-data` and continue.
-    d. Delegate to `the-builder`: "Create a validated Tablassert config at `{launch_dir}/{normalized_stem}.yaml` from this summary: {extractor's summary}. Use an uppercase alphanumeric-only filename stem."
-    e. Call `discovery-ledger add` with status `success` (or `failed` if the builder could not produce a valid config), a one-line summary, and `config_path`.
+    d. Delegate to `the-builder`: "Create validated Tablassert config file(s) in `{launch_dir}/` from this summary: {extractor's summary}. Use uppercase alphanumeric-only filename stems. Prefer multiple smaller configs when one paper or supplement is easier to represent that way."
+    e. Call `discovery-ledger add` with status `success` (or `failed` if the builder could not produce valid configs), a one-line summary, and `config_paths`.
     f. Report in minimal tree style, for example:
        `{launch_dir}/`
        `|- {normalized_stem}.yaml`
-       ``- .ledger/{sanitized-topic}/papers/PMC{id}/`
+       `|- {normalized_stem}B.yaml`
+       ``- .ledger/{sanitized-topic}/data/PMC{id}/`
 3. After the batch is exhausted, request the next page from the scout.
 
 ## Stop Signal

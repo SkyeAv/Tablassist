@@ -168,6 +168,7 @@ def test_search_pmc_returns_structured_results(monkeypatch: Any) -> None:
     assert result["papers"][0]["authors"] == ["Jane Doe", "John Roe"]
     assert captured[0][0].endswith("esearch.fcgi")
     assert "open access" in captured[0][1]["term"]
+    assert "supplementary materials" not in captured[0][1]["term"]
 
 
 def test_search_pmc_handles_no_results(monkeypatch: Any) -> None:
@@ -186,6 +187,15 @@ def test_search_pmc_handles_ncbi_error_payload(monkeypatch: Any) -> None:
     monkeypatch.setattr(cli, "get_json_response", fake_json_response)
 
     assert search_pmc("nothing") == {"error": "PMC search failed: API key invalid"}
+
+
+def test_search_pmc_handles_ncbi_error_list(monkeypatch: Any) -> None:
+    def fake_json_response(url: str, params: dict[str, Any]) -> dict[str, Any]:
+        return {"esearchresult": {"errorlist": {"phrasesnotfound": ["materials"]}}}
+
+    monkeypatch.setattr(cli, "get_json_response", fake_json_response)
+
+    assert search_pmc("nothing") == {"error": "PMC search failed: phrasesnotfound: materials"}
 
 
 def test_search_pmc_handles_summary_error_payload(monkeypatch: Any) -> None:
@@ -251,10 +261,10 @@ def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
         status="success",
         summary="worked",
         topic="cancer",
-        config_path="cancer/PMC42/config.yaml",
+        config_paths=["ROMERO3.yaml", "ROMERO3B.yaml"],
     )
     assert added["added"]["pmcid"] == 42
-    assert added["added"]["config_path"] == "cancer/PMC42/config.yaml"
+    assert added["added"]["config_paths"] == ["ROMERO3.yaml", "ROMERO3B.yaml"]
     assert added["total_entries"] == 1
 
     check_hit = discovery_ledger("check", ledger_path, pmc_id=42)
@@ -266,6 +276,18 @@ def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
     disk = json.loads(ledger_path.read_text())
     assert disk["topic"] == "cancer"
     assert disk["entries"][0]["pmcid"] == 42
+    assert disk["entries"][0]["config_paths"] == ["ROMERO3.yaml", "ROMERO3B.yaml"]
+
+
+def test_discovery_ledger_read_normalizes_legacy_config_path(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "ledger.json"
+    ledger_path.write_text(
+        json.dumps({"topic": "cancer", "entries": [{"pmcid": 42, "status": "success", "config_path": "ROMERO3.yaml"}]})
+    )
+
+    result = discovery_ledger("read", ledger_path)
+
+    assert result["entries"][0]["config_paths"] == ["ROMERO3.yaml"]
 
 
 def test_discovery_ledger_add_requires_fields(tmp_path: Path) -> None:

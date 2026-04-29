@@ -89,6 +89,8 @@ describe("createCommandConfigHook", () => {
     })
     expect(discover?.template).toContain("autonomous discover")
     expect(discover?.template).toContain(".ledger/<sanitized-topic>/")
+    expect(discover?.template).toContain(".ledger/<sanitized-topic>/data/PMC<id>/")
+    expect(discover?.template).toContain("multiple configs")
     expect(discover?.template).toContain("ROMERO3.yaml")
   })
 

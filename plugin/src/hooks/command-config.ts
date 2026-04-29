@@ -33,13 +33,13 @@ Follow this workflow in order:
 
 Run in a continuous loop:
 1. Search for open-access PMC papers with tabular supplementary data on this topic.
-2. For each paper found: download supplements, preview tabular data, spot-check 1-2 transformed identifiers, create a Tablassert YAML config, and validate it.
+2. For each paper found: download supplements, preview tabular data, spot-check 1-2 transformed identifiers, create one or more Tablassert YAML configs when that is clearer, and validate each config.
 3. Write each final YAML into the directory where this command was launched. Use uppercase alphanumeric-only stems, e.g. \`ROMERO3.yaml\`.
-4. Put every non-YAML artifact under \`.ledger/<sanitized-topic>/\`, including \`discoveries.json\`, per-paper downloads, and working files.
+4. Put every non-YAML artifact under \`.ledger/<sanitized-topic>/\`. Store downloaded supplements and working files under \`.ledger/<sanitized-topic>/data/PMC<id>/...\` and keep the ledger file there too.
 5. Continue processing papers until I tell you to stop.
 6. After each paper, report in a minimal tree-style format.
 
-Focus on papers with downloadable Excel, CSV, or TSV supplementary files. Record YAML paths relative to the launch directory when practical.`,
+Focus on papers with downloadable Excel, CSV, or TSV supplementary files. One paper or even one supplement may justify multiple configs if that makes the extraction easier to read. Record YAML paths relative to the launch directory when practical.`,
     description: "Autonomously discover papers and create configs on a topic",
     agent: "the-pioneer",
   },

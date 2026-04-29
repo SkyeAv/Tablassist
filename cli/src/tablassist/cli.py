@@ -320,10 +320,26 @@ PMC_ESUMMARY_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.
 PMC_EFETCH_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 
+def _get_ncbi_result_error(payload: dict[str, Any]) -> Optional[str]:
+    if error := payload.get("error") or payload.get("ERROR"):
+        return str(error)
+
+    error_list: Any = payload.get("errorlist")
+    if isinstance(error_list, dict):
+        details: list[str] = []
+        for key, value in error_list.items():
+            if isinstance(value, list) and value:
+                details.append(f"{key}: {', '.join(str(item) for item in value)}")
+        if details:
+            return "; ".join(details)
+
+    return None
+
+
 @CLI.command
 def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, Any]:
     """Search PubMed Central for open-access articles with supplementary data."""
-    full_query: str = f'"{query}" AND open access[filter] AND supplementary materials[filter]'
+    full_query: str = f'"{query}" AND open access[filter]'
     esearch_params: dict[str, Any] = with_ncbi_api_key(
         {"db": "pmc", "retmode": "json", "retmax": max_results, "retstart": page * max_results, "term": full_query}
     )
@@ -337,7 +353,7 @@ def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, An
         return {"error": "PMC search returned a non-object response"}
 
     result: dict[str, Any] = esearch.get("esearchresult", {}) if isinstance(esearch.get("esearchresult"), dict) else {}
-    if error := result.get("error") or result.get("ERROR"):
+    if error := _get_ncbi_result_error(result):
         return {"error": f"PMC search failed: {error}"}
 
     id_list: list[str] = result.get("idlist", []) or []
@@ -355,7 +371,7 @@ def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, An
             return {"error": "PMC summary lookup returned a non-object response"}
 
         summaries: dict[str, Any] = esummary.get("result", {}) if isinstance(esummary.get("result"), dict) else {}
-        if error := summaries.get("error"):
+        if error := _get_ncbi_result_error(summaries):
             return {"error": f"PMC summary lookup failed: {error}"}
 
         for pmc_id in id_list:
@@ -386,11 +402,16 @@ def discovery_ledger(
     summary: Optional[str] = None,
     topic: Optional[str] = None,
     config_path: Optional[str] = None,
+    config_paths: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     """Manage the discovery progress ledger (read/add/check entries)."""
     ledger = load_ledger(ledger_path, topic)
     if ledger is None or "error" in ledger:
         return ledger or {"error": "Failed to load ledger"}
+
+    for entry in ledger.get("entries", []):
+        if "config_paths" not in entry and entry.get("config_path"):
+            entry["config_paths"] = [entry["config_path"]]
 
     if action == "read":
         return ledger
@@ -403,7 +424,8 @@ def discovery_ledger(
     if action == "add":
         if pmc_id is None or status is None:
             return {"error": "add requires pmc_id and status"}
-        return ledger_add(ledger_path, ledger, pmc_id, status, summary, topic, config_path)
+        normalized_config_paths: list[str] = config_paths or ([config_path] if config_path else [])
+        return ledger_add(ledger_path, ledger, pmc_id, status, summary, topic, normalized_config_paths or None)
 
     return {"error": f"unknown action: {action}"}
 

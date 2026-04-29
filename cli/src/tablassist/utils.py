@@ -136,7 +136,7 @@ def ledger_add(
     status: str,
     summary: Optional[str],
     topic: Optional[str],
-    config_path: Optional[str],
+    config_paths: Optional[list[str]],
 ) -> dict[str, Any]:
     entry: dict[str, Any] = {
         "pmcid": int(pmc_id),
@@ -144,8 +144,8 @@ def ledger_add(
         "summary": summary or "",
         "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
     }
-    if config_path:
-        entry["config_path"] = config_path
+    if config_paths:
+        entry["config_paths"] = config_paths
     ledger.setdefault("entries", []).append(entry)
     if topic and not ledger.get("topic"):
         ledger["topic"] = topic
