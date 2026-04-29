@@ -58,6 +58,17 @@ describe("createSystemPromptHook conditional injection", () => {
     expect(output.system).toHaveLength(6)
   })
 
+  it("injects all resources for the-pioneer", async () => {
+    const tracker = createAgentTracker()
+    tracker.track("sess-1", "the-pioneer")
+    const hook = createSystemPromptHook(mockCache(), tracker)
+    const output = { system: [] as string[] }
+
+    await hook({ sessionID: "sess-1", model: STUB_MODEL }, output)
+
+    expect(output.system).toHaveLength(6)
+  })
+
   it("injects nothing for the-extractor", async () => {
     const tracker = createAgentTracker()
     tracker.track("sess-1", "the-extractor")

@@ -4,7 +4,7 @@ import type { Hooks } from "@opencode-ai/plugin"
  * Agents that receive all system prompt resources (schema, docs, examples).
  * All other agents receive nothing.
  */
-export const RESOURCE_AGENTS = new Set(["the-builder", "the-configurator"])
+export const RESOURCE_AGENTS = new Set(["the-builder", "the-configurator", "the-pioneer"])
 
 export function createAgentTracker() {
   const sessionAgents = new Map<string, string>()

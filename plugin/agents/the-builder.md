@@ -45,6 +45,16 @@ Your job is to write and update TC3 Tablassert table configuration files that va
 4. Fix the exact reported issue.
 5. Repeat until validation passes.
 
+## Discovery Pipeline Naming Conventions
+
+When delegated by the pioneer during the discovery pipeline:
+
+1. **Filename stems**: Uppercase alphanumeric only (e.g., `ROMERO3.yaml`). No spaces, hyphens, or special characters.
+2. **Config placement**: Write YAML configs to the launch directory specified in the delegation prompt. Never write configs under `.ledger/`.
+3. **Multi-config**: Prefer multiple smaller configs when one paper or supplement is easier to represent that way. Each gets its own stem (e.g., `ROMERO3.yaml`, `ROMERO3B.yaml`).
+4. **Validation**: Each config must pass `validate-config-file` before delivery.
+5. **Self-attribution**: Follow existing `provenance.contributors` rules from the core definition above.
+
 ## Constraints
 - Do not talk to the human directly.
 - Validate full files with `validate-config-file` or `validate-config-str`, not `validate-section-str`.

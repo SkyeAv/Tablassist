@@ -40,6 +40,12 @@ describe("needsResources", () => {
     expect(tracker.needsResources("sess-1")).toBe(true)
   })
 
+  it("returns true for the-pioneer", () => {
+    const tracker = createAgentTracker()
+    tracker.track("sess-1", "the-pioneer")
+    expect(tracker.needsResources("sess-1")).toBe(true)
+  })
+
   it("returns false for the-extractor", () => {
     const tracker = createAgentTracker()
     tracker.track("sess-1", "the-extractor")
@@ -66,10 +72,11 @@ describe("needsResources", () => {
 })
 
 describe("RESOURCE_AGENTS", () => {
-  it("contains exactly the-builder and the-configurator", () => {
-    expect(RESOURCE_AGENTS.size).toBe(2)
+  it("contains exactly the-builder, the-configurator, and the-pioneer", () => {
+    expect(RESOURCE_AGENTS.size).toBe(3)
     expect(RESOURCE_AGENTS.has("the-builder")).toBe(true)
     expect(RESOURCE_AGENTS.has("the-configurator")).toBe(true)
+    expect(RESOURCE_AGENTS.has("the-pioneer")).toBe(true)
     expect(RESOURCE_AGENTS.has("the-extractor")).toBe(false)
   })
 })
