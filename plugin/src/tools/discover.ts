@@ -5,7 +5,7 @@ import { createCliTool } from "./shared.ts"
 
 const z = tool.schema
 
-export function createDiscoveryTools(cli: CliRunner) {
+export function createDiscoverTools(cli: CliRunner) {
   return {
     "search-pmc": createCliTool(
       "Search PMC for open-access articles on a topic. Returns ranked papers with metadata.",

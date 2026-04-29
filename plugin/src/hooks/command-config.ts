@@ -29,17 +29,17 @@ Follow this workflow in order:
     agent: "the-configurator",
   },
   "tablassist:discover": {
-    template: `Begin autonomous paper discovery on the topic: {args}
+    template: `Begin autonomous discover on the topic: {args}
 
 Run in a continuous loop:
 1. Search for open-access PMC papers with tabular supplementary data on this topic.
-2. For each paper found: download supplements, preview tabular data, create a Tablassert YAML config, and validate it.
-3. Track progress in a discovery ledger (discovery-ledger.json inside the topic output directory).
-4. Continue processing papers until I tell you to stop.
-5. After each paper, briefly report what you did and the result.
+2. For each paper found: download supplements, preview tabular data, spot-check 1-2 transformed identifiers, create a Tablassert YAML config, and validate it.
+3. Write each final YAML into the directory where this command was launched. Use uppercase alphanumeric-only stems, e.g. \`ROMERO3.yaml\`.
+4. Put every non-YAML artifact under \`.ledger/<sanitized-topic>/\`, including \`discoveries.json\`, per-paper downloads, and working files.
+5. Continue processing papers until I tell you to stop.
+6. After each paper, report in a minimal tree-style format.
 
-Focus on papers with downloadable Excel, CSV, or TSV supplementary files.
-Create output in discovery-{sanitized-topic}/ with per-paper subdirectories.`,
+Focus on papers with downloadable Excel, CSV, or TSV supplementary files. Record YAML paths relative to the launch directory when practical.`,
     description: "Autonomously discover papers and create configs on a topic",
     agent: "the-pioneer",
   },

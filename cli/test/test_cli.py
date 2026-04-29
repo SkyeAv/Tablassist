@@ -179,6 +179,26 @@ def test_search_pmc_handles_no_results(monkeypatch: Any) -> None:
     assert search_pmc("nothing") == {"count": 0, "papers": []}
 
 
+def test_search_pmc_handles_ncbi_error_payload(monkeypatch: Any) -> None:
+    def fake_json_response(url: str, params: dict[str, Any]) -> dict[str, Any]:
+        return {"esearchresult": {"ERROR": "API key invalid"}}
+
+    monkeypatch.setattr(cli, "get_json_response", fake_json_response)
+
+    assert search_pmc("nothing") == {"error": "PMC search failed: API key invalid"}
+
+
+def test_search_pmc_handles_summary_error_payload(monkeypatch: Any) -> None:
+    def fake_json_response(url: str, params: dict[str, Any]) -> dict[str, Any]:
+        if url.endswith("esearch.fcgi"):
+            return {"esearchresult": {"count": "1", "idlist": ["111"]}}
+        return {"result": {"error": "rate limit"}}
+
+    monkeypatch.setattr(cli, "get_json_response", fake_json_response)
+
+    assert search_pmc("nothing") == {"error": "PMC summary lookup failed: rate limit"}
+
+
 def test_get_pmc_summary_parses_xml(monkeypatch: Any) -> None:
     sample_xml = """<?xml version="1.0"?>
 <root>

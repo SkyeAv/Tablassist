@@ -3,7 +3,7 @@ import type { ToolDefinition } from "@opencode-ai/plugin"
 import type { CliRunner } from "../cli.ts"
 import { createApiTools } from "./api.ts"
 import { createBiolinkTools } from "./biolink.ts"
-import { createDiscoveryTools } from "./discovery.ts"
+import { createDiscoverTools } from "./discover.ts"
 import { createFileTools } from "./files.ts"
 import { createSchemaTools } from "./schema.ts"
 
@@ -13,6 +13,6 @@ export function createAllTools(cli: CliRunner): Record<string, ToolDefinition> {
     ...createBiolinkTools(cli),
     ...createSchemaTools(cli),
     ...createFileTools(cli),
-    ...createDiscoveryTools(cli),
+    ...createDiscoverTools(cli),
   }
 }

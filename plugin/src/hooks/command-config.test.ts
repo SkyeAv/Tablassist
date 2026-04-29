@@ -87,8 +87,9 @@ describe("createCommandConfigHook", () => {
       description: "Autonomously discover papers and create configs on a topic",
       agent: "the-pioneer",
     })
-    expect(discover?.template).toContain("autonomous paper discovery")
-    expect(discover?.template).toContain("discovery-ledger.json")
+    expect(discover?.template).toContain("autonomous discover")
+    expect(discover?.template).toContain(".ledger/<sanitized-topic>/")
+    expect(discover?.template).toContain("ROMERO3.yaml")
   })
 
   it("does not register unprefixed command keys", async () => {

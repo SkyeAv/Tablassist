@@ -72,14 +72,13 @@ def parse_pmc_supplements(xml_root: ET.Element) -> list[dict[str, str]]:
 
 def parse_pmc_paper_summary(pmc_id: str, item: dict[str, Any]) -> dict[str, Any]:
     authors: list[str] = [a.get("name", "") for a in item.get("authors", []) or [] if a.get("name")]
-    has_suppl: bool = any("suppl" in (a.get("name", "") or "").lower() for a in item.get("articleids", []) or [])
 
     return {
         "pmcid": int(pmc_id),
         "title": item.get("title", ""),
         "authors": authors,
         "date": item.get("pubdate", ""),
-        "has_suppl_data": has_suppl,
+        "has_suppl_data": False,
     }
 
 

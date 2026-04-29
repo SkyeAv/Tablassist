@@ -48,6 +48,7 @@ Your job is to find open-access PMC papers that look promising for Tablassert co
    - **Deprioritize**: only `.pdf` or `.docx` supplements — body extraction is noisy.
    - **Skip**: no supplements.
 5. Return a concise ranked list. Each entry: `{pmcid, title, supplement_types, recommended: bool, relevance_note}`. Keep `relevance_note` to one short sentence.
+6. Prefer candidates whose likely output filenames will normalize cleanly to distinct uppercase alphanumeric stems.
 
 ## Constraints
 - Do not download files.

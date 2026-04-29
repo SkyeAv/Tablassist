@@ -1,5 +1,3 @@
-import datetime as dt
-import json
 import os
 import re
 import subprocess
@@ -19,12 +17,16 @@ from tablassert.models import Section
 from tablassist.utils import (
     TIMEOUT,
     build_semantic_converter,
+    ledger_add,
+    ledger_check,
     get_biolink_html_documentation,
     get_html_as_markdown,
     get_json_response,
     get_static_content,
     get_xml_response,
-    parse_pmc_supplements,
+    load_ledger,
+    parse_pmc_article_xml,
+    parse_pmc_paper_summary,
     parse_yaml_string,
     validate_config_root,
     validate_section,
@@ -326,32 +328,39 @@ def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, An
         {"db": "pmc", "retmode": "json", "retmax": max_results, "retstart": page * max_results, "term": full_query}
     )
 
-    esearch: Any = get_json_response(PMC_ESEARCH_URL, esearch_params)
-    result: dict[str, Any] = esearch.get("esearchresult", {}) if isinstance(esearch, dict) else {}
+    try:
+        esearch: Any = get_json_response(PMC_ESEARCH_URL, esearch_params)
+    except httpx.HTTPError as e:
+        return {"error": f"PMC search failed: {e}"}
+
+    if not isinstance(esearch, dict):
+        return {"error": "PMC search returned a non-object response"}
+
+    result: dict[str, Any] = esearch.get("esearchresult", {}) if isinstance(esearch.get("esearchresult"), dict) else {}
+    if error := result.get("error") or result.get("ERROR"):
+        return {"error": f"PMC search failed: {error}"}
+
     id_list: list[str] = result.get("idlist", []) or []
     count: int = int(result.get("count", 0) or 0)
 
     papers: list[dict[str, Any]] = []
     if id_list:
         esummary_params: dict[str, Any] = with_ncbi_api_key({"db": "pmc", "retmode": "json", "id": ",".join(id_list)})
-        esummary: Any = get_json_response(PMC_ESUMMARY_URL, esummary_params)
-        summaries: dict[str, Any] = esummary.get("result", {}) if isinstance(esummary, dict) else {}
+        try:
+            esummary: Any = get_json_response(PMC_ESUMMARY_URL, esummary_params)
+        except httpx.HTTPError as e:
+            return {"error": f"PMC summary lookup failed: {e}"}
+
+        if not isinstance(esummary, dict):
+            return {"error": "PMC summary lookup returned a non-object response"}
+
+        summaries: dict[str, Any] = esummary.get("result", {}) if isinstance(esummary.get("result"), dict) else {}
+        if error := summaries.get("error"):
+            return {"error": f"PMC summary lookup failed: {error}"}
+
         for pmc_id in id_list:
             item: dict[str, Any] = summaries.get(pmc_id, {}) or {}
-            authors_field: list[dict[str, Any]] = item.get("authors", []) or []
-            authors: list[str] = [a.get("name", "") for a in authors_field if a.get("name")]
-            has_suppl: bool = any(
-                "suppl" in (a.get("name", "") or "").lower() for a in item.get("articleids", []) or []
-            )
-            papers.append(
-                {
-                    "pmcid": int(pmc_id),
-                    "title": item.get("title", ""),
-                    "authors": authors,
-                    "date": item.get("pubdate", ""),
-                    "has_suppl_data": has_suppl,
-                }
-            )
+            papers.append(parse_pmc_paper_summary(pmc_id, item))
 
     return {"count": count, "papers": papers}
 
@@ -365,27 +374,7 @@ def get_pmc_summary(pmc_id: int) -> dict[str, Any]:
     except Exception as e:
         return {"error": f"EFetch failed for PMC{pmc_id}: {e}"}
 
-    title_el: Any = next(iter(root.iter("article-title")), None)
-    title: str = "".join(title_el.itertext()).strip() if title_el is not None else ""
-
-    abstract_el: Any = next(iter(root.iter("abstract")), None)
-    abstract: str = "".join(abstract_el.itertext()).strip() if abstract_el is not None else ""
-
-    authors: list[str] = []
-    for contrib in root.iter("contrib"):
-        if contrib.get("contrib-type") and contrib.get("contrib-type") != "author":
-            continue
-        surname_el: Any = next(iter(contrib.iter("surname")), None)
-        given_el: Any = next(iter(contrib.iter("given-names")), None)
-        surname: str = surname_el.text.strip() if surname_el is not None and surname_el.text else ""
-        given: str = given_el.text.strip() if given_el is not None and given_el.text else ""
-        name: str = f"{given} {surname}".strip()
-        if name:
-            authors.append(name)
-
-    supplements: list[dict[str, str]] = parse_pmc_supplements(root)
-
-    return {"pmcid": pmc_id, "title": title, "abstract": abstract, "authors": authors, "supplements": supplements}
+    return parse_pmc_article_xml(pmc_id, root)
 
 
 @CLI.command
@@ -399,14 +388,9 @@ def discovery_ledger(
     config_path: Optional[str] = None,
 ) -> dict[str, Any]:
     """Manage the discovery progress ledger (read/add/check entries)."""
-    ledger: dict[str, Any]
-    if ledger_path.exists():
-        try:
-            ledger = json.loads(ledger_path.read_text())
-        except json.JSONDecodeError as e:
-            return {"error": f"Ledger JSON parse error: {e}"}
-    else:
-        ledger = {"topic": topic or "", "entries": []}
+    ledger = load_ledger(ledger_path, topic)
+    if ledger is None or "error" in ledger:
+        return ledger or {"error": "Failed to load ledger"}
 
     if action == "read":
         return ledger
@@ -414,28 +398,12 @@ def discovery_ledger(
     if action == "check":
         if pmc_id is None:
             return {"error": "check requires pmc_id"}
-        for entry in ledger.get("entries", []):
-            if int(entry.get("pmcid", -1)) == int(pmc_id):
-                return {"exists": True, "entry": entry}
-        return {"exists": False, "entry": None}
+        return ledger_check(ledger, pmc_id)
 
     if action == "add":
         if pmc_id is None or status is None:
             return {"error": "add requires pmc_id and status"}
-        entry: dict[str, Any] = {
-            "pmcid": int(pmc_id),
-            "status": status,
-            "summary": summary or "",
-            "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
-        }
-        if config_path:
-            entry["config_path"] = config_path
-        ledger.setdefault("entries", []).append(entry)
-        if topic and not ledger.get("topic"):
-            ledger["topic"] = topic
-        ledger_path.parent.mkdir(parents=True, exist_ok=True)
-        ledger_path.write_text(json.dumps(ledger, indent=2))
-        return {"added": entry, "total_entries": len(ledger["entries"])}
+        return ledger_add(ledger_path, ledger, pmc_id, status, summary, topic, config_path)
 
     return {"error": f"unknown action: {action}"}
 
