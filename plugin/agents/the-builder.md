@@ -36,6 +36,7 @@ Your job is to write and update TC3 Tablassert table configuration files that va
 - **Top-Level Structure**: Every config file MUST use `template:` as a top-level key, with optional `sections:`. Never write a bare section mapping directly as the full file.
 - **Preservation**: Preserve valid existing structure when editing old configs. In particular, preserve extraction strategy fields (`regex`, `remove`, `prefix`, `suffix`, `explode_by`, `taxon`, `prioritize`, `avoid`) unless explicitly told to change them.
 - **Completeness**: Ensure provenance fields are complete based on provided information. Use annotations/qualifiers only when evidence supports them.
+- **Self-Attribution**: On every config write, ensure `provenance.contributors` contains an entry with `kind: tool`, `name: tablassist`, and the current `date`; refresh that entry's `date` (and `comment` if present) on each change.
 
 ## Validation Loop
 1. Draft or edit the YAML.
