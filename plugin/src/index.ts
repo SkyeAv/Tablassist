@@ -6,6 +6,7 @@ import { runCliCommand, runCliDetailed } from "./cli.ts"
 import { createAgentConfigHook } from "./hooks/agent-config.ts"
 import { createCommandConfigHook } from "./hooks/command-config.ts"
 import { createSystemPromptHook } from "./hooks/system-prompt.ts"
+import { createTemperatureHook } from "./hooks/temperature.ts"
 import { createYamlValidationHook } from "./hooks/yaml-validation.ts"
 import { createAllTools } from "./tools/index.ts"
 
@@ -17,6 +18,8 @@ const Tablassist: Plugin = async ({ $ }) => {
 
   const agentConfigHook = createAgentConfigHook()
   const commandConfigHook = createCommandConfigHook()
+  const agentTrackingHook = createAgentTrackingHook(tracker)
+  const temperatureHook = createTemperatureHook()
 
   return {
     config: async (config) => {
@@ -24,7 +27,10 @@ const Tablassist: Plugin = async ({ $ }) => {
       await commandConfigHook(config)
     },
     tool: createAllTools(cli),
-    "chat.params": createAgentTrackingHook(tracker),
+    "chat.params": async (input, output) => {
+      await agentTrackingHook(input, output)
+      await temperatureHook(input, output)
+    },
     "tool.execute.after": createYamlValidationHook(cliDetailed),
     "experimental.chat.system.transform": createSystemPromptHook(cache, tracker),
   }
