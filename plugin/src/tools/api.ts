@@ -37,5 +37,15 @@ export function createApiTools(cli: CliRunner) {
       {},
       () => cli("pmc-oa-readme", []),
     ),
+    "download-pmc-oa": createCliTool(
+      "Download all files for a PMC article (XML, TXT, PDF, JSON metadata, media, supplements) from the PMC Open Access S3 bucket via the AWS CLI. Picks the latest article version unless one is supplied. Returns the destination directory, version chosen, and the list of downloaded files. Note: You must subsequently use tools like 'extract-text' or 'extract-text-semantic' to read the downloaded files.",
+      { pmc_id: z.number().int(), dest_dir: z.string().optional(), version: z.number().int().optional() },
+      (args: { pmc_id: number; dest_dir?: string; version?: number }) =>
+        cli("download-pmc-oa", [
+          String(args.pmc_id),
+          ...(args.dest_dir ? [args.dest_dir] : []),
+          ...(args.version !== undefined ? ["--version", String(args.version)] : []),
+        ]),
+    ),
   }
 }

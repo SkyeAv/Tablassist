@@ -47,12 +47,18 @@ When asked to obtain a source file (PMC article, publisher supplement, tabular d
 ### Step 1 — download-pmc-tar (when a PMC ID is available)
 Use `download-pmc-tar` with the numeric PMC ID. If it succeeds, read the extracted files directly.
 
-### Step 2 — AWS S3 via pmc-oa-readme (PMC fallback)
+### Step 2 — PMC OA S3 via `download-pmc-oa` (PMC fallback)
 If Step 1 errors (404, 400, connection failure) and a PMC ID is available:
-1. Call `pmc-oa-readme` to get the official PMC Open Access bucket paths.
-2. Build the `aws s3 cp` command from the readme.
-3. Execute via bash: `aws s3 cp --no-sign-request s3://pmc-oa-opendata/oa_comm/xml/all/PMC<id>.xml ./` (adjust path per the readme).
-4. If S3 says "fatal error" / "404", the article likely isn't in the OA subset — continue to Step 3.
+1. Call `download-pmc-oa` with the numeric PMC ID. It uses the AWS CLI to list available
+   article versions in `s3://pmc-oa-opendata/PMC<id>.<version>/` and recursively downloads
+   every object — XML, plain text, PDF, JSON metadata, media, and supplements — into the
+   chosen destination. The tool returns the `dest_dir`, version chosen, and the file list.
+2. If you need a specific article version, pass it via `version`; otherwise the latest is used.
+3. Read the downloaded files with `extract-text` / `extract-text-semantic` / `preview-*` as usual.
+4. Only consult `pmc-oa-readme` if `download-pmc-oa` returns an error you don't understand
+   (e.g., schema changes in the bucket layout) — do not hand-build `aws s3 cp` commands.
+5. If the tool reports `No PMC OA versions found` or the AWS CLI fails, the article is
+   likely not in the OA subset — continue to Step 3.
 
 ### Step 3 — Web retrieval, making a real effort
 Applies to **any** source (PMC, publisher, supplement, arbitrary `source.url`). If earlier steps fail or don't apply:

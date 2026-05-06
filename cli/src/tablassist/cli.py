@@ -315,6 +315,116 @@ def pmc_oa_readme() -> str:
     return get_html_as_markdown(url)
 
 
+PMC_OA_BUCKET: str = "pmc-oa-opendata"
+PMC_OA_LIST_TIMEOUT: float = 60.0
+PMC_OA_COPY_TIMEOUT: float = 600.0
+
+
+@CLI.command
+def download_pmc_oa(pmc_id: int, dest_dir: Path = Path("."), version: Optional[int] = None) -> dict[str, Any]:
+    """Download all files for a PMC article from the PMC OA S3 bucket via the AWS CLI.
+
+    Lists available article-version prefixes under s3://pmc-oa-opendata/PMC<id>., picks the
+    requested version (or the latest), and recursively downloads every object — XML, plain
+    text, PDF, JSON metadata, media, and supplementary files — into <dest_dir>/PMC<id>.<ver>/.
+    Uses --no-sign-request so no AWS account is required. Requires the `aws` CLI in PATH.
+    """
+    prefix: str = f"PMC{pmc_id}."
+
+    list_cmd: list[str] = [
+        "aws",
+        "s3api",
+        "list-objects-v2",
+        "--bucket",
+        PMC_OA_BUCKET,
+        "--prefix",
+        prefix,
+        "--delimiter",
+        "/",
+        "--query",
+        "CommonPrefixes[].Prefix",
+        "--output",
+        "text",
+        "--no-sign-request",
+    ]
+
+    try:
+        listing: subprocess.CompletedProcess[str] = subprocess.run(
+            list_cmd, capture_output=True, text=True, timeout=PMC_OA_LIST_TIMEOUT
+        )
+    except FileNotFoundError:
+        return {"error": "aws CLI not found in PATH"}
+    except subprocess.TimeoutExpired:
+        return {"error": f"aws s3api list-objects-v2 timed out after {PMC_OA_LIST_TIMEOUT}s"}
+
+    if listing.returncode != 0:
+        detail: str = listing.stderr.strip() or listing.stdout.strip() or "no output"
+        return {"error": f"aws s3api list-objects-v2 failed: {detail}"}
+
+    versions: list[tuple[int, str]] = []
+    for raw in listing.stdout.split():
+        candidate: str = raw.strip().rstrip("/")
+        if "." not in candidate:
+            continue
+        _, ver_part = candidate.rsplit(".", 1)
+        try:
+            versions.append((int(ver_part), candidate))
+        except ValueError:
+            continue
+
+    if not versions:
+        return {"error": f"No PMC OA versions found for PMC{pmc_id}"}
+
+    available: list[int] = sorted(v for v, _ in versions)
+    if version is not None:
+        chosen: Optional[tuple[int, str]] = next(((v, p) for v, p in versions if v == version), None)
+        if chosen is None:
+            return {"error": f"Version {version} not found for PMC{pmc_id}; available: {available}"}
+    else:
+        chosen = max(versions, key=lambda x: x[0])
+
+    chosen_version: int = chosen[0]
+    chosen_prefix: str = chosen[1]
+
+    target_dir: Path = dest_dir / chosen_prefix
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    cp_cmd: list[str] = [
+        "aws",
+        "s3",
+        "cp",
+        "--recursive",
+        "--no-sign-request",
+        f"s3://{PMC_OA_BUCKET}/{chosen_prefix}/",
+        str(target_dir),
+    ]
+
+    try:
+        cp: subprocess.CompletedProcess[str] = subprocess.run(
+            cp_cmd, capture_output=True, text=True, timeout=PMC_OA_COPY_TIMEOUT
+        )
+    except FileNotFoundError:
+        return {"error": "aws CLI not found in PATH"}
+    except subprocess.TimeoutExpired:
+        return {"error": f"aws s3 cp timed out after {PMC_OA_COPY_TIMEOUT}s"}
+
+    if cp.returncode != 0:
+        detail = cp.stderr.strip() or cp.stdout.strip() or "no output"
+        return {"error": f"aws s3 cp failed: {detail}"}
+
+    files: list[str] = sorted(str(p.relative_to(target_dir)) for p in target_dir.rglob("*") if p.is_file())
+
+    return {
+        "status": "ok",
+        "pmcid": pmc_id,
+        "version": chosen_version,
+        "prefix": chosen_prefix,
+        "dest_dir": str(target_dir),
+        "files": files,
+        "available_versions": available,
+    }
+
+
 PMC_ESEARCH_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PMC_ESUMMARY_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 PMC_EFETCH_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"

@@ -11,6 +11,7 @@ describe("createAllTools", () => {
       "docs-category",
       "docs-predicate",
       "docs-qualifier",
+      "download-pmc-oa",
       "download-pmc-tar",
       "excel-sheets",
       "extract-text",
