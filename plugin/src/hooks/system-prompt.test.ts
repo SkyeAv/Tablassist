@@ -42,7 +42,7 @@ describe("createSystemPromptHook conditional injection", () => {
     expect(output.system[0]).toContain("Schema")
   })
 
-  it("injects a smaller bundle for the-configurator", async () => {
+  it("injects only the orchestration bundle for the-configurator", async () => {
     const tracker = createAgentTracker()
     tracker.track("sess-1", "the-configurator")
     const hook = createSystemPromptHook(mockCache(), tracker)
@@ -50,7 +50,8 @@ describe("createSystemPromptHook conditional injection", () => {
 
     await hook({ sessionID: "sess-1", model: STUB_MODEL }, output)
 
-    expect(output.system).toHaveLength(2)
+    expect(output.system).toHaveLength(1)
+    expect(output.system[0]).toContain("## Table Configuration Documentation")
   })
 
   it("injects only the orchestration bundle for the-pioneer", async () => {
@@ -87,23 +88,23 @@ describe("createSystemPromptHook conditional injection", () => {
     expect(output.system).toHaveLength(0)
   })
 
-  it("falls back to configurator resources when sessionID is undefined", async () => {
+  it("injects nothing when sessionID is undefined", async () => {
     const tracker = createAgentTracker()
     const hook = createSystemPromptHook(mockCache(), tracker)
     const output = { system: [] as string[] }
 
     await hook({ sessionID: undefined, model: STUB_MODEL }, output)
 
-    expect(output.system).toHaveLength(2)
+    expect(output.system).toHaveLength(0)
   })
 
-  it("falls back to configurator resources for untracked session", async () => {
+  it("injects nothing for untracked session", async () => {
     const tracker = createAgentTracker()
     const hook = createSystemPromptHook(mockCache(), tracker)
     const output = { system: [] as string[] }
 
     await hook({ sessionID: "unknown-sess", model: STUB_MODEL }, output)
 
-    expect(output.system).toHaveLength(2)
+    expect(output.system).toHaveLength(0)
   })
 })

@@ -8,7 +8,7 @@ const z = tool.schema
 export function createDiscoverTools(cli: CliRunner) {
   return {
     "search-pmc": createCliTool(
-      "Search PMC for open-access articles on a topic. Returns ranked papers; triage supplements with get-pmc-summary.",
+      "Search PubMed Central for open-access articles. When to use: literature discovery on a topic. Triage candidates with get-pmc-summary. Returns {count, papers[]}.",
       {
         query: z.string(),
         max_results: z.number().int().positive().default(10),
@@ -18,12 +18,12 @@ export function createDiscoverTools(cli: CliRunner) {
         cli("search-pmc", [args.query, String(args.max_results ?? 10), String(args.page ?? 0)]),
     ),
     "get-pmc-summary": createCliTool(
-      "Fetch detailed metadata and supplement list for a PMC article",
+      "Fetch metadata and supplements list for one PMC article. When to use: triage after search-pmc returned a candidate. Returns {pmcid, title, abstract, authors, supplements}.",
       { pmc_id: z.number().int() },
       (args: { pmc_id: number }) => cli("get-pmc-summary", [String(args.pmc_id)]),
     ),
     "discovery-ledger": createCliTool(
-      "Manage discovery progress ledger (read/add/check/claim/release). Ledger tracks per-paper outcomes and active claims so concurrent agents can share a topic safely across context resets.",
+      "Read or mutate the discovery ledger (read/add/check/claim/release). When to use: the-pioneer batch workflows for cross-session state and concurrent claim coordination. Returns action-shaped dict.",
       {
         action: z.enum(["read", "add", "check", "claim", "release"]),
         ledger_path: z.string(),

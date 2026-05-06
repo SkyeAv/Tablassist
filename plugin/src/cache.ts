@@ -1,6 +1,4 @@
-export type CachedResourceKey =
-  | "sectionSchema"
-  | "docsTableConfig"
+export type CachedResourceKey = "sectionSchema" | "docsTableConfig"
 
 export type CachedResourceMap = Record<CachedResourceKey, string>
 

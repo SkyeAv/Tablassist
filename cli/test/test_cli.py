@@ -321,7 +321,12 @@ def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
     assert check_hit["entry"]["status"] == "success"
     assert check_hit["claimed"] is False
 
-    assert discovery_ledger("check", ledger_path, pmc_id=99) == {"exists": False, "entry": None, "claimed": False, "claim": None}
+    assert discovery_ledger("check", ledger_path, pmc_id=99) == {
+        "exists": False,
+        "entry": None,
+        "claimed": False,
+        "claim": None,
+    }
 
     disk = json.loads(ledger_path.read_text())
     assert disk["topic"] == "cancer"
@@ -537,7 +542,10 @@ def test_download_pmc_tar_extracts_into_source_and_removes_archive(tmp_path: Pat
 
 def test_download_url_writes_into_raw_dir(tmp_path: Path) -> None:
     class FakeResponse:
-        headers = {"content-disposition": 'attachment; filename="table.tsv"', "content-type": "text/tab-separated-values"}
+        headers = {
+            "content-disposition": 'attachment; filename="table.tsv"',
+            "content-type": "text/tab-separated-values",
+        }
 
         def __enter__(self) -> "FakeResponse":
             return self

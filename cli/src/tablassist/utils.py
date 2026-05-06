@@ -10,16 +10,19 @@ from urllib.parse import quote
 
 import httpx
 import lazy_loader as Lazy
-import trafilatura
-import yaml
-from pydantic import ValidationError
-from tablassert.models import Section
-from yaml import CLoader
 
 if TYPE_CHECKING:
     import docling
+    import trafilatura
+    import yaml
+    from pydantic import ValidationError
+    from tablassert.models import Section
 else:
     docling = Lazy.load("docling")
+    pydantic = Lazy.load("pydantic")
+    tablassert_models = Lazy.load("tablassert.models", suppress_warning=True)
+    trafilatura = Lazy.load("trafilatura")
+    yaml = Lazy.load("yaml")
 
 TIMEOUT: float = 60.0  # seconds
 
@@ -124,13 +127,7 @@ def _utc_now_iso() -> str:
 
 def _default_ledger(topic: Optional[str]) -> dict[str, Any]:
     now: str = _utc_now_iso()
-    return {
-        "version": LEDGER_VERSION,
-        "topic": topic or "",
-        "entries": [],
-        "claims": {},
-        "updated_at": now,
-    }
+    return {"version": LEDGER_VERSION, "topic": topic or "", "entries": [], "claims": {}, "updated_at": now}
 
 
 def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str, Any]:
@@ -166,7 +163,9 @@ def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str,
             continue
 
         timestamp = raw_entry.get("timestamp") if isinstance(raw_entry.get("timestamp"), str) else None
-        created_at = raw_entry.get("created_at") if isinstance(raw_entry.get("created_at"), str) else timestamp or _utc_now_iso()
+        created_at = (
+            raw_entry.get("created_at") if isinstance(raw_entry.get("created_at"), str) else timestamp or _utc_now_iso()
+        )
         updated_at = raw_entry.get("updated_at") if isinstance(raw_entry.get("updated_at"), str) else created_at
         config_paths = raw_entry.get("config_paths")
         if not isinstance(config_paths, list):
@@ -252,7 +251,9 @@ def _release_ledger_lock(lock_path: Path) -> None:
 
 def _write_ledger_unlocked(ledger_path: Path, ledger: dict[str, Any]) -> None:
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", dir=ledger_path.parent, prefix=f".{ledger_path.name}.", suffix=".tmp", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        "w", dir=ledger_path.parent, prefix=f".{ledger_path.name}.", suffix=".tmp", delete=False
+    ) as f:
         json.dump(ledger, f, indent=2)
         f.write("\n")
         tmp_path = Path(f.name)
@@ -267,11 +268,7 @@ def write_ledger(ledger_path: Path, ledger: dict[str, Any]) -> None:
         _release_ledger_lock(lock_path)
 
 
-def update_ledger(
-    ledger_path: Path,
-    topic: Optional[str],
-    update_fn: Any,
-) -> dict[str, Any]:
+def update_ledger(ledger_path: Path, topic: Optional[str], update_fn: Any) -> dict[str, Any]:
     lock_path = _acquire_ledger_lock(ledger_path)
     try:
         ledger = load_ledger(ledger_path, topic)
@@ -290,12 +287,7 @@ def ledger_check(ledger: dict[str, Any], pmc_id: int) -> dict[str, Any]:
     for entry in ledger.get("entries", []):
         if int(entry.get("pmcid", -1)) == int(pmc_id):
             claim = ledger.get("claims", {}).get(str(pmc_id))
-            return {
-                "exists": True,
-                "entry": entry,
-                "claimed": claim is not None,
-                "claim": claim,
-            }
+            return {"exists": True, "entry": entry, "claimed": claim is not None, "claim": claim}
     claim = ledger.get("claims", {}).get(str(pmc_id))
     return {"exists": False, "entry": None, "claimed": claim is not None, "claim": claim}
 
@@ -335,12 +327,7 @@ def ledger_claim(
     return update_ledger(ledger_path, topic, _claim)
 
 
-def ledger_release(
-    ledger_path: Path,
-    topic: Optional[str],
-    pmc_id: int,
-    run_id: Optional[str],
-) -> dict[str, Any]:
+def ledger_release(ledger_path: Path, topic: Optional[str], pmc_id: int, run_id: Optional[str]) -> dict[str, Any]:
     def _release(ledger: dict[str, Any]) -> dict[str, Any]:
         key = str(int(pmc_id))
         existing = ledger.get("claims", {}).get(key)
@@ -418,9 +405,9 @@ def validate_section(s: dict[str, Any]) -> dict[str, Any]:
     section: dict[str, Any] = {k: v for k, v in s.items() if k != "config"}
 
     try:
-        Section.model_validate(section)
+        tablassert_models.Section.model_validate(section)  # pyright: ignore
         return {"section": section, "status": "ok"}
-    except ValidationError as e:
+    except pydantic.ValidationError as e:  # pyright: ignore
         return {"section": section, "error": f"{e}"}
 
 
@@ -442,7 +429,7 @@ def validate_config_root(raw: Any) -> Optional[dict[str, Any]]:
 
 def parse_yaml_string(yaml_string: str) -> Any:
     try:
-        return yaml.load(yaml_string, Loader=CLoader)
+        return yaml.load(yaml_string, Loader=yaml.CLoader)  # pyright: ignore
     except yaml.scanner.ScannerError as e:  # pyright: ignore
         return {"error": f"YAML Syntax error at line {e.problem_mark.line + 1}: {e.problem}"}
     except yaml.parser.ParserError as e:  # pyright: ignore

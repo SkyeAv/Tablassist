@@ -8,15 +8,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 from urllib.parse import urlparse
 
-import fastexcel
 import httpx
 import lazy_loader as Lazy
-import polars as pl
-import yaml
 from cyclopts import App
-from tablassert.enums import Categories, Predicates, Qualifiers
-from tablassert.ingests import from_yaml, to_sections
-from tablassert.models import Section
 
 from tablassist.utils import (
     TIMEOUT,
@@ -40,9 +34,21 @@ from tablassist.utils import (
 )
 
 if TYPE_CHECKING:
+    import fastexcel
+    import polars as pl
     import textract
+    import yaml
+    from tablassert.enums import Categories, Predicates, Qualifiers
+    from tablassert.ingests import from_yaml, to_sections
+    from tablassert.models import Section
 else:
+    fastexcel = Lazy.load("fastexcel")
+    pl = Lazy.load("polars")
+    tablassert_enums = Lazy.load("tablassert.enums", suppress_warning=True)
+    tablassert_ingests = Lazy.load("tablassert.ingests", suppress_warning=True)
+    tablassert_models = Lazy.load("tablassert.models", suppress_warning=True)
     textract = Lazy.load("textract")
+    yaml = Lazy.load("yaml")
 
 CLI: App = App()
 
@@ -270,25 +276,25 @@ def resolve_taxon_id(organism_name: str) -> Union[list[Any], dict[str, Any]]:
 @CLI.command
 def list_categories() -> list[str]:
     """List all supported Biolink categories."""
-    return [x.value for x in Categories]
+    return [x.value for x in tablassert_enums.Categories]  # pyright: ignore
 
 
 @CLI.command
 def list_predicates() -> list[str]:
     """List all supported Biolink predicates."""
-    return [x.value for x in Predicates]
+    return [x.value for x in tablassert_enums.Predicates]  # pyright: ignore
 
 
 @CLI.command
 def list_qualifiers() -> list[str]:
     """List all supported Biolink qualifiers."""
-    return [x.value for x in Qualifiers]
+    return [x.value for x in tablassert_enums.Qualifiers]  # pyright: ignore
 
 
 @CLI.command
 def section_schema() -> dict[str, Any]:
     """Return the Section Pydantic model as JSON schema."""
-    return Section.model_json_schema()
+    return tablassert_models.Section.model_json_schema()  # pyright: ignore
 
 
 @CLI.command
@@ -313,7 +319,7 @@ def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str
         return root_error
 
     p: Path = Path(".")
-    sections: list[Any] = to_sections(raw, p)
+    sections: list[Any] = tablassert_ingests.to_sections(raw, p)  # pyright: ignore
 
     errors: list[dict[str, Any]] = []
     for s in sections:
@@ -326,7 +332,7 @@ def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str
 def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str, Any]]]:
     """Validate a full YAML config file with top-level template and optional sections keys."""
     try:
-        raw: Any = from_yaml(yaml_file)
+        raw: Any = tablassert_ingests.from_yaml(yaml_file)  # pyright: ignore
     except yaml.scanner.ScannerError as e:  # pyright: ignore
         return {"error": f"YAML Syntax error at line {e.problem_mark.line + 1}: {e.problem}"}
     except yaml.parser.ParserError as e:  # pyright: ignore
@@ -338,7 +344,7 @@ def validate_config_file(yaml_file: Path) -> Union[dict[str, Any], list[dict[str
     if root_error:
         return root_error
 
-    sections: list[Any] = to_sections(raw, yaml_file)
+    sections: list[Any] = tablassert_ingests.to_sections(raw, yaml_file)  # pyright: ignore
 
     errors: list[dict[str, Any]] = []
     for s in sections:

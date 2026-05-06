@@ -60,14 +60,14 @@ describe("needsResources", () => {
     expect(tracker.needsResources("sess-2")).toBe(false)
   })
 
-  it("falls back to true when session is unknown", () => {
+  it("returns false when session is unknown", () => {
     const tracker = createAgentTracker()
-    expect(tracker.needsResources("unknown")).toBe(true)
+    expect(tracker.needsResources("unknown")).toBe(false)
   })
 
-  it("falls back to true when sessionID is undefined", () => {
+  it("returns false when sessionID is undefined", () => {
     const tracker = createAgentTracker()
-    expect(tracker.needsResources(undefined)).toBe(true)
+    expect(tracker.needsResources(undefined)).toBe(false)
   })
 })
 
@@ -97,10 +97,10 @@ describe("getPromptResourceKeys", () => {
     expect(tracker.getPromptResourceKeys("sess-2")).toEqual([])
   })
 
-  it("falls back to configurator resources for unknown sessions", () => {
+  it("returns no resources for unknown sessions", () => {
     const tracker = createAgentTracker()
 
-    expect(tracker.getPromptResourceKeys("unknown")).toEqual(RESOURCE_AGENT_KEYS["the-configurator"] ?? [])
-    expect(tracker.getPromptResourceKeys(undefined)).toEqual(RESOURCE_AGENT_KEYS["the-configurator"] ?? [])
+    expect(tracker.getPromptResourceKeys("unknown")).toEqual([])
+    expect(tracker.getPromptResourceKeys(undefined)).toEqual([])
   })
 })

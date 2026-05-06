@@ -7,11 +7,9 @@ import type { CachedResourceKey } from "./cache.ts"
  */
 export const RESOURCE_AGENT_KEYS: Record<string, CachedResourceKey[]> = {
   "the-builder": ["sectionSchema", "docsTableConfig"],
-  "the-configurator": ["sectionSchema", "docsTableConfig"],
+  "the-configurator": ["docsTableConfig"],
   "the-pioneer": ["docsTableConfig"],
 }
-
-const DEFAULT_RESOURCE_AGENT = "the-configurator"
 
 export function createAgentTracker() {
   const sessionAgents = new Map<string, string>()
@@ -27,7 +25,7 @@ export function createAgentTracker() {
 
   function getPromptResourceKeys(sessionID: string | undefined): CachedResourceKey[] {
     const agent = get(sessionID)
-    if (!agent) return RESOURCE_AGENT_KEYS[DEFAULT_RESOURCE_AGENT] ?? []
+    if (!agent) return []
     return RESOURCE_AGENT_KEYS[agent] ?? []
   }
 
