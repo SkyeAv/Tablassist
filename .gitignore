@@ -17,3 +17,8 @@
 
 # Direnv
 *.envrc
+
+# Tablassert
+*.onnxassert
+*.logassert
+*.storassert

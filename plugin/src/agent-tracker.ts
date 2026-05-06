@@ -1,10 +1,17 @@
 import type { Hooks } from "@opencode-ai/plugin"
 
+import type { CachedResourceKey } from "./cache.ts"
+
 /**
- * Agents that receive all system prompt resources (schema, docs, examples).
- * All other agents receive nothing.
+ * Agent-specific system-prompt resource bundles.
  */
-export const RESOURCE_AGENTS = new Set(["the-builder", "the-configurator", "the-pioneer"])
+export const RESOURCE_AGENT_KEYS: Record<string, CachedResourceKey[]> = {
+  "the-builder": ["sectionSchema", "docsTableConfig"],
+  "the-configurator": ["sectionSchema", "docsTableConfig"],
+  "the-pioneer": ["docsTableConfig"],
+}
+
+const DEFAULT_RESOURCE_AGENT = "the-configurator"
 
 export function createAgentTracker() {
   const sessionAgents = new Map<string, string>()
@@ -18,13 +25,17 @@ export function createAgentTracker() {
     return sessionAgents.get(sessionID)
   }
 
-  function needsResources(sessionID: string | undefined): boolean {
+  function getPromptResourceKeys(sessionID: string | undefined): CachedResourceKey[] {
     const agent = get(sessionID)
-    if (!agent) return true // Fallback: inject all resources when unknown
-    return RESOURCE_AGENTS.has(agent)
+    if (!agent) return RESOURCE_AGENT_KEYS[DEFAULT_RESOURCE_AGENT] ?? []
+    return RESOURCE_AGENT_KEYS[agent] ?? []
   }
 
-  return { track, get, needsResources }
+  function needsResources(sessionID: string | undefined): boolean {
+    return getPromptResourceKeys(sessionID).length > 0
+  }
+
+  return { track, get, getPromptResourceKeys, needsResources }
 }
 
 export type AgentTracker = ReturnType<typeof createAgentTracker>

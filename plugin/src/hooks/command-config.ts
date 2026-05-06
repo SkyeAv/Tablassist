@@ -10,13 +10,13 @@ Follow this workflow in order:
 
 1. **Validate structure** — run \`validate-config-file\` on the config. If it fails, note the errors but continue the audit.
 
-2. **Acquire source data** — delegate to \`the-extractor\` to download the source file. Do NOT assume \`source.local\` already exists; the extractor runs the full fallback chain (\`download-pmc-tar\` → S3 via \`pmc-oa-readme\` → web retrieval with mirror/API/cookie strategies) and reports the path where the file landed. If the extractor exhausts every strategy, ask the human for a manual download path and hand it back to the extractor.
+2. **Acquire source data** — delegate to \`the-extractor\` to download the source file into a deterministic artifact root. Do NOT assume \`source.local\` already exists; the extractor runs the full fallback chain (\`download-pmc-tar\` → \`download-pmc-oa\` → \`download-url\` / web retrieval with mirror/API/cookie strategies) and reports the stable path where the file landed. If the extractor exhausts every strategy, ask the human for a manual download path and hand it back to the extractor.
 
-3. **Preview source data** — once the file is in hand, delegate column preview to \`the-extractor\` using the reported path.
+3. **Inspect source data** — once the file is in hand, delegate tabular inspection to \`the-extractor\` using the reported path. The extractor should prefer \`describe-csv\` / \`describe-excel\` for first-pass inspection and only use \`preview-*\` for narrow follow-up row checks.
 
 4. **Evaluate extraction strategy** — for each column mapping, inspect the \`regex\`, \`remove\`, \`prefix\`, \`suffix\`, \`explode_by\`, \`taxon\`, \`prioritize\`, and \`avoid\` fields. Assess whether the transforms will correctly extract clean identifiers from the raw column values you previewed.
 
-5. **Spot-check CURIE resolution** — pick 3–5 representative raw values from the target columns, mentally apply the config's transforms (regex, remove, prefix, etc.), then run \`search-curies\` or \`search-gene-curies\` on the transformed values. Report which resolve and which don't.
+5. **Spot-check CURIE resolution** — pick 3–5 representative raw values from the target columns, mentally apply the config's transforms (regex, remove, prefix, etc.), then run \`search-curies\` or \`search-gene-curies\` on the transformed values. Do not treat transformed identifiers as valid candidate values until this search step succeeds. Report which resolve and which don't.
 
 6. **Check Biolink alignment and qualifier accuracy** — verify categories and predicates with \`docs-category\`, \`docs-predicate\`, and \`list-predicates\`. Then go further on qualifiers: use \`list-qualifiers\` and \`docs-qualifier\` to evaluate whether each statement's qualifier set scientifically represents what the table and paper actually claim. Flag qualifiers that are missing, wrong, or redundant (e.g. needing \`anatomical_context_qualifier\`, \`causal_mechanism_qualifier\`, \`subject_direction_qualifier\`, \`object_aspect_qualifier\`) so the assertion is scientifically accurate.
 
@@ -33,11 +33,12 @@ Follow this workflow in order:
 
 Run in a continuous loop:
 1. Search for open-access PMC papers with tabular supplementary data on this topic.
-2. For each paper found: download supplements, preview tabular data, spot-check 1-2 transformed identifiers, create one or more Tablassert YAML configs when that is clearer, and validate each config.
+2. For each paper found: use \`discovery-ledger\` claims so concurrent agents do not duplicate work, download supplements into a deterministic paper-local artifact root, inspect tabular data with \`describe-csv\` / \`describe-excel\`, use \`preview-*\` only for narrow follow-up checks, spot-check 1-2 transformed identifiers with \`search-curies\` or \`search-gene-curies\` before trusting those values, create one or more Tablassert YAML configs when that is clearer, and validate each config.
 3. Write each final YAML into the directory where this command was launched.
-4. Put every non-YAML artifact under \`.ledger/<sanitized-topic>/\`. Store downloaded supplements and working files under \`.ledger/<sanitized-topic>/data/PMC<id>/...\` and keep the ledger file there too.
-5. Continue processing papers until I tell you to stop.
-6. After each paper, report in a minimal tree-style format.
+4. Put every non-YAML artifact under \`.ledger/<sanitized-topic>/\`. Store downloaded supplements and working files under \`.ledger/<sanitized-topic>/data/PMC<id>/raw/\`, \`source/\`, \`derived/\`, \`scratch/\`, and \`logs/\` as appropriate, and keep the ledger file there too.
+5. Never run broad wildcard cleanup. If an extractor or download tool cleans up after itself, it may remove only specific temporary files it created for the current paper.
+6. Continue processing papers until I tell you to stop.
+7. After each paper, report in a minimal tree-style format.
 
 Focus on papers with downloadable Excel, CSV, or TSV supplementary files. Record YAML paths relative to the launch directory when practical.`,
     description: "Autonomously discover papers and create configs on a topic",

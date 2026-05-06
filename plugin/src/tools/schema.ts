@@ -10,11 +10,6 @@ export function createSchemaTools(cli: CliRunner) {
     "section-schema": createCliTool("Return the Section Pydantic model as JSON schema", {}, () =>
       cli("section-schema", []),
     ),
-    "validate-section-str": createCliTool(
-      "Validate a single bare YAML section only; use full-config validation for template/sections files",
-      { yaml_string: z.string() },
-      (args: { yaml_string: string }) => cli("validate-section-str", [args.yaml_string]),
-    ),
     "validate-config-str": createCliTool(
       "Validate a full YAML config string with top-level template and optional sections keys",
       { yaml_string: z.string() },

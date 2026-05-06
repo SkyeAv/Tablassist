@@ -35,12 +35,6 @@ pip install "tablassist[rtcompat]"  # Polars build for CPUs without required ins
 ```bash
 # Fetch table configuration documentation
 tablassist docs-table-config
-
-# Fetch advanced configuration examples
-tablassist docs-advanced-examples
-
-# Fetch the CLI tutorial
-tablassist docs-tutorial
 ```
 
 ### Entity Resolution
@@ -48,9 +42,6 @@ tablassist docs-tutorial
 ```bash
 # Search for entity CURIEs by term
 tablassist search-curies "breast cancer"
-
-# Get canonical info for a specific CURIE
-tablassist get-curie-info "MONDO:0007254"
 
 # Search gene CURIEs within an NCBI taxon
 tablassist search-gene-curies "BRCA1" --ncbi-taxon 9606

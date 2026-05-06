@@ -23,9 +23,9 @@ export function createDiscoverTools(cli: CliRunner) {
       (args: { pmc_id: number }) => cli("get-pmc-summary", [String(args.pmc_id)]),
     ),
     "discovery-ledger": createCliTool(
-      "Manage discovery progress ledger (read/add/check). Ledger tracks processed PMCIDs so the pipeline survives context resets.",
+      "Manage discovery progress ledger (read/add/check/claim/release). Ledger tracks per-paper outcomes and active claims so concurrent agents can share a topic safely across context resets.",
       {
-        action: z.enum(["read", "add", "check"]),
+        action: z.enum(["read", "add", "check", "claim", "release"]),
         ledger_path: z.string(),
         pmc_id: z.number().int().optional(),
         status: z.string().optional(),
@@ -33,9 +33,13 @@ export function createDiscoverTools(cli: CliRunner) {
         topic: z.string().optional(),
         config_paths: z.array(z.string()).optional(),
         config_path: z.string().optional(),
+        artifact_root: z.string().optional(),
+        agent_name: z.string().optional(),
+        run_id: z.string().optional(),
+        lease_seconds: z.number().int().positive().optional(),
       },
       (args: {
-        action: "read" | "add" | "check"
+        action: "read" | "add" | "check" | "claim" | "release"
         ledger_path: string
         pmc_id?: number
         status?: string
@@ -43,6 +47,10 @@ export function createDiscoverTools(cli: CliRunner) {
         topic?: string
         config_paths?: string[]
         config_path?: string
+        artifact_root?: string
+        agent_name?: string
+        run_id?: string
+        lease_seconds?: number
       }) =>
         cli("discovery-ledger", [
           args.action,
@@ -53,6 +61,10 @@ export function createDiscoverTools(cli: CliRunner) {
           ...(args.topic ? ["--topic", args.topic] : []),
           ...(args.config_paths?.length ? args.config_paths.flatMap((path) => ["--config-paths", path]) : []),
           ...(args.config_path ? ["--config-path", args.config_path] : []),
+          ...(args.artifact_root ? ["--artifact-root", args.artifact_root] : []),
+          ...(args.agent_name ? ["--agent-name", args.agent_name] : []),
+          ...(args.run_id ? ["--run-id", args.run_id] : []),
+          ...(args.lease_seconds !== undefined ? ["--lease-seconds", String(args.lease_seconds)] : []),
         ]),
     ),
   }

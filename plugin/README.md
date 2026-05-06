@@ -68,7 +68,7 @@ Three agents orchestrate the configuration workflow:
 All commands are namespaced with the `tablassist:` prefix.
 
 - `/tablassist:audit <config-path>` performs a deep, report-first review: validates structure, fetches the PMC publication archive when available, uses semantic extraction for structured document review, consults schema and Biolink references, and recommends improvements without applying them until you approve.
-- `/tablassist:validate <config-path>` validates a config file and reports schema errors. If PMC-backed follow-up is needed, it should prefer `download-pmc-tar`, then use `pmc-oa-readme` as the official fallback.
+- `/tablassist:validate <config-path>` validates a config file and reports schema errors. If PMC-backed follow-up is needed, it should prefer `download-pmc-tar`, then `download-pmc-oa`, before any open-web fallback.
 - `/tablassist:preview <file-path>` previews rows from a CSV, TSV, or Excel file.
 - `/tablassist:search <term>` searches for CURIE candidates matching a term.
 
@@ -77,9 +77,11 @@ PMC retrieval guidance for agents:
 1. Prefer Tablassist-native tools and the `/tablassist:*` slash commands before open-web approaches.
 2. For PMC content, follow the three-step retrieval chain:
    1. Try `download-pmc-tar` first.
-   2. If that fails, call `pmc-oa-readme` to obtain the AWS CLI commands, then execute them via `bash` (e.g., `aws s3 cp --no-sign-request ...`).
-   3. Only if both steps above fail, fall back to direct web retrieval (e.g., `curl` or `webfetch`) as a last resort.
-3. Do not retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML instead of the expected archive. This prohibition applies to guessed URLs only — executing the official AWS CLI commands returned by `pmc-oa-readme` via `bash` is expected and required.
+   2. If that fails, try `download-pmc-oa`.
+   3. Only if both steps above fail, fall back to deterministic URL retrieval (`download-url`, then `curl` or `webfetch` only when necessary) as a last resort.
+3. Keep all non-YAML artifacts under a deterministic paper-local root such as `.ledger/<sanitized-topic>/data/PMC<id>/`, with `raw/`, `source/`, `derived/`, and `scratch/` subdirectories as needed.
+4. Never use broad wildcard cleanup in the launch directory. Cleanup may remove only specific temporary files created for the current paper run.
+5. Do not retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML instead of the expected archive.
 
 Example:
 

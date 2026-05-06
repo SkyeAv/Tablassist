@@ -1,17 +1,22 @@
 import type { Hooks } from "@opencode-ai/plugin"
 
 import type { AgentTracker } from "../agent-tracker.ts"
-import type { CachedResourceMap, TablassistCache } from "../cache.ts"
+import type { CachedResourceKey, CachedResourceMap, TablassistCache } from "../cache.ts"
 
-export function formatSystemPromptResources(resources: CachedResourceMap): string[] {
-  return [
-    ["## Tablassert Section JSON Schema", resources.sectionSchema].join("\n\n"),
-    ["## Table Configuration Documentation", resources.docsTableConfig].join("\n\n"),
-    ["## Advanced Configuration Examples", resources.docsAdvancedExamples].join("\n\n"),
-    ["## Tutorial Reference", resources.docsTutorial].join("\n\n"),
-    ["## Example Without Sections", resources.exampleNoSections].join("\n\n"),
-    ["## Example With Sections", resources.exampleWithSections].join("\n\n"),
-  ]
+const RESOURCE_HEADERS: Record<CachedResourceKey, string> = {
+  sectionSchema: "## Tablassert Section JSON Schema",
+  docsTableConfig: "## Table Configuration Documentation",
+}
+
+export function formatSystemPromptResources(
+  resources: Partial<CachedResourceMap>,
+  keys: CachedResourceKey[],
+): string[] {
+  return keys.flatMap((key) => {
+    const value = resources[key]
+    if (!value) return []
+    return [[RESOURCE_HEADERS[key], value].join("\n\n")]
+  })
 }
 
 export function createSystemPromptHook(
@@ -19,9 +24,12 @@ export function createSystemPromptHook(
   tracker: AgentTracker,
 ): NonNullable<Hooks["experimental.chat.system.transform"]> {
   return async (input, output) => {
-    if (!tracker.needsResources(input.sessionID)) return
+    const keys = tracker.getPromptResourceKeys(input.sessionID)
+    if (keys.length === 0) return
 
-    const resources = await cache.getSystemPromptResources()
-    output.system.push(...formatSystemPromptResources(resources))
+    const entries = await Promise.all(keys.map(async (key) => [key, await cache.get(key)] as const))
+    const resources = Object.fromEntries(entries) as Partial<CachedResourceMap>
+
+    output.system.push(...formatSystemPromptResources(resources, keys))
   }
 }

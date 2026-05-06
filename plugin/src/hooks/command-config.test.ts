@@ -50,6 +50,9 @@ describe("createCommandConfigHook", () => {
     expect(template).toContain("qualifier accuracy")
     expect(template).toContain("manual download path")
     expect(template).toContain("download-pmc-tar")
+    expect(template).toContain("download-url")
+    expect(template).toContain("describe-csv")
+    expect(template).toContain("Do not treat transformed identifiers as valid candidate values")
   })
 
   it("registers tablassist:validate with correct metadata", async () => {
@@ -89,8 +92,12 @@ describe("createCommandConfigHook", () => {
     })
     expect(discover?.template).toContain("autonomous discover")
     expect(discover?.template).toContain(".ledger/<sanitized-topic>/")
-    expect(discover?.template).toContain(".ledger/<sanitized-topic>/data/PMC<id>/")
+    expect(discover?.template).toContain(".ledger/<sanitized-topic>/data/PMC<id>/raw/")
     expect(discover?.template).toContain("Excel")
+    expect(discover?.template).toContain("describe-excel")
+    expect(discover?.template).toContain("search-curies")
+    expect(discover?.template).toContain("discovery-ledger")
+    expect(discover?.template).toContain("Never run broad wildcard cleanup")
   })
 
   it("does not register unprefixed command keys", async () => {

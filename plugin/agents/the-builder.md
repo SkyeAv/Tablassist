@@ -12,12 +12,12 @@ tools:
   extract-text: false
   extract-text-semantic: false
   excel-sheets: false
+  describe-excel: false
+  describe-csv: false
   preview-excel: false
   preview-csv: false
   download-pmc-tar: false
-  pmc-oa-readme: false
   search-curies: false
-  get-curie-info: false
   search-gene-curies: false
   resolve-taxon-id: false
   list-categories: false
@@ -37,6 +37,7 @@ Your job is to write and update TC3 Tablassert table configuration files that va
 - **Preservation**: Preserve valid existing structure when editing old configs. In particular, preserve extraction strategy fields (`regex`, `remove`, `prefix`, `suffix`, `explode_by`, `taxon`, `prioritize`, `avoid`) unless explicitly told to change them.
 - **Completeness**: Ensure provenance fields are complete based on provided information. Use annotations/qualifiers only when evidence supports them.
 - **Self-Attribution**: On every config write, ensure `provenance.contributors` contains an entry with `kind: tool`, `name: tablassist`, and the current `date`; refresh that entry's `date` (and `comment` if present) on each change.
+- **No Implicit Resolution**: If the delegated summary contains identifier values that were not explicitly checked with `search-curies` or `search-gene-curies`, treat them as unverified and report that back to the primary agent instead of silently baking them in as trusted mappings.
 
 ## Validation Loop
 1. Draft or edit the YAML.

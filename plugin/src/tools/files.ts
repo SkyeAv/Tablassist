@@ -52,5 +52,24 @@ export function createFileTools(cli: CliRunner) {
       (args: { file: string; n_rows: number; separator?: string }) =>
         cli("preview-csv", [args.file, String(args.n_rows), ...(args.separator ? [args.separator] : [])]),
     ),
+    "describe-excel": createCliTool(
+      "Inspect an Excel sheet with Polars: schema, sample rows, null counts, unique values, and per-column statistics",
+      {
+        file: z.string(),
+        sheet_name: z.string(),
+        engine: z.enum(["calamine", "openpyxl", "xlsx2csv"]).optional(),
+      },
+      (args: { file: string; sheet_name: string; engine?: "calamine" | "openpyxl" | "xlsx2csv" }) =>
+        cli("describe-excel", [args.file, args.sheet_name, ...(args.engine ? [args.engine] : [])]),
+    ),
+    "describe-csv": createCliTool(
+      "Inspect a CSV or TSV with Polars: schema, sample rows, null counts, unique values, and per-column statistics",
+      {
+        file: z.string(),
+        separator: z.string().optional(),
+      },
+      (args: { file: string; separator?: string }) =>
+        cli("describe-csv", [args.file, ...(args.separator ? [args.separator] : [])]),
+    ),
   }
 }

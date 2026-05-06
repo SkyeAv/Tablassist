@@ -39,7 +39,7 @@ function parseFrontmatter(content: string): { frontmatter: AgentFrontmatter; bod
     const trimmed = line.trimEnd()
     if (!trimmed || trimmed.startsWith("#")) continue
 
-    const nestedMatch = trimmed.match(/^(\s{2,})(\w+):\s*(.+)$/)
+    const nestedMatch = trimmed.match(/^(\s{2,})([\w-]+):\s*(.+)$/)
     if (nestedMatch && currentKey && currentObj) {
       const nestedKey = nestedMatch[2]
       const nestedValue = nestedMatch[3]

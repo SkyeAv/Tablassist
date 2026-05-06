@@ -1,10 +1,6 @@
 export type CachedResourceKey =
   | "sectionSchema"
   | "docsTableConfig"
-  | "docsAdvancedExamples"
-  | "docsTutorial"
-  | "exampleNoSections"
-  | "exampleWithSections"
 
 export type CachedResourceMap = Record<CachedResourceKey, string>
 
@@ -13,10 +9,6 @@ export type CacheLoader = (command: string, args: string[]) => Promise<string>
 const RESOURCE_COMMANDS: Record<CachedResourceKey, string> = {
   sectionSchema: "section-schema",
   docsTableConfig: "docs-table-config",
-  docsAdvancedExamples: "docs-advanced-examples",
-  docsTutorial: "docs-tutorial",
-  exampleNoSections: "example-no-sections",
-  exampleWithSections: "example-with-sections",
 }
 
 export function createTablassistCache(loader: CacheLoader) {
@@ -50,23 +42,11 @@ export function createTablassistCache(loader: CacheLoader) {
   }
 
   async function getSystemPromptResources(): Promise<CachedResourceMap> {
-    const [sectionSchema, docsTableConfig, docsAdvancedExamples, docsTutorial, exampleNoSections, exampleWithSections] =
-      await Promise.all([
-        get("sectionSchema"),
-        get("docsTableConfig"),
-        get("docsAdvancedExamples"),
-        get("docsTutorial"),
-        get("exampleNoSections"),
-        get("exampleWithSections"),
-      ])
+    const [sectionSchema, docsTableConfig] = await Promise.all([get("sectionSchema"), get("docsTableConfig")])
 
     return {
       sectionSchema,
       docsTableConfig,
-      docsAdvancedExamples,
-      docsTutorial,
-      exampleNoSections,
-      exampleWithSections,
     }
   }
 

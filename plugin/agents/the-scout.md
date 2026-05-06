@@ -11,12 +11,13 @@ tools:
   extract-text: false
   extract-text-semantic: false
   excel-sheets: false
+  describe-excel: false
+  describe-csv: false
   preview-excel: false
   preview-csv: false
   download-pmc-tar: false
-  pmc-oa-readme: false
+  download-pmc-oa: false
   search-curies: false
-  get-curie-info: false
   search-gene-curies: false
   resolve-taxon-id: false
   validate-config-str: false

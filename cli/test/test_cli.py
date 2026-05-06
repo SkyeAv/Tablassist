@@ -3,11 +3,17 @@ import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
+import polars as pl
 import tablassist.cli as cli
 from tablassist.cli import (
+    describe_csv,
+    describe_excel,
     discovery_ledger,
     download_pmc_oa,
+    download_pmc_tar,
+    download_url,
     extract_text_semantic,
     get_pmc_summary,
     list_categories,
@@ -31,6 +37,35 @@ def test_preview_csv_reads_rows() -> None:
     preview: dict[str, list[str] | list[float]] = preview_csv(FIXTURES_DIR / "preview.csv", n_rows=1)
 
     assert preview == {"gene": ["BRCA1"], "score": [0.91]}
+
+
+def test_describe_csv_profiles_columns(tmp_path: Path) -> None:
+    file = tmp_path / "describe.csv"
+    file.write_text("gene,score,count,flag\nBRCA1,0.91,5,true\nTP53,,3,false\n,0.2,,true\n")
+
+    result = describe_csv(file)
+    columns = {column["name"]: column for column in result["columns"]}
+
+    assert result["shape"] == {"rows": 3, "columns": 4}
+    assert result["schema"] == {"gene": "String", "score": "Float64", "count": "Int64", "flag": "Boolean"}
+    assert result["sample_rows"][0] == {"gene": "BRCA1", "score": 0.91, "count": 5, "flag": True}
+    assert columns["gene"]["null_count"] == 1
+    assert columns["gene"]["statistics"] == {"min_length": 4, "max_length": 5, "mean_length": 4.5}
+    assert columns["score"]["statistics"]["min"] == 0.2
+    assert columns["score"]["statistics"]["max"] == 0.91
+    assert columns["flag"]["statistics"] == {"true_count": 2, "false_count": 1}
+
+
+def test_describe_excel_profiles_sheet(tmp_path: Path) -> None:
+    file = tmp_path / "describe.xlsx"
+    pl.DataFrame({"gene": ["BRCA1", "TP53"], "score": [0.91, 0.87]}).write_excel(file, worksheet="Sheet1")
+
+    result = describe_excel(file, "Sheet1")
+
+    assert result["sheet_name"] == "Sheet1"
+    assert result["shape"] == {"rows": 2, "columns": 2}
+    assert result["schema"] == {"gene": "String", "score": "Float64"}
+    assert result["columns"][1]["statistics"]["max"] == 0.91
 
 
 def test_validate_section_str_accepts_single_section() -> None:
@@ -254,7 +289,15 @@ def test_get_pmc_summary_parses_xml(monkeypatch: Any) -> None:
 def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
     ledger_path = tmp_path / "ledger.json"
 
-    assert discovery_ledger("read", ledger_path) == {"topic": "", "entries": []}
+    empty = discovery_ledger("read", ledger_path)
+    assert empty["topic"] == ""
+    assert empty["entries"] == []
+    assert empty["claims"] == {}
+    assert empty["version"] == 2
+
+    claim = discovery_ledger("claim", ledger_path, pmc_id=42, agent_name="the-pioneer", run_id="run-1", topic="cancer")
+    assert claim["claimed"] is True
+    assert claim["claim"]["pmcid"] == 42
 
     added = discovery_ledger(
         "add",
@@ -264,21 +307,28 @@ def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
         summary="worked",
         topic="cancer",
         config_paths=["ROMERO3.yaml", "ROMERO3B.yaml"],
+        artifact_root=".ledger/cancer/data/PMC42",
+        agent_name="the-pioneer",
+        run_id="run-1",
     )
     assert added["added"]["pmcid"] == 42
     assert added["added"]["config_paths"] == ["ROMERO3.yaml", "ROMERO3B.yaml"]
+    assert added["added"]["artifact_root"] == ".ledger/cancer/data/PMC42"
     assert added["total_entries"] == 1
 
     check_hit = discovery_ledger("check", ledger_path, pmc_id=42)
     assert check_hit["exists"] is True
     assert check_hit["entry"]["status"] == "success"
+    assert check_hit["claimed"] is False
 
-    assert discovery_ledger("check", ledger_path, pmc_id=99) == {"exists": False, "entry": None}
+    assert discovery_ledger("check", ledger_path, pmc_id=99) == {"exists": False, "entry": None, "claimed": False, "claim": None}
 
     disk = json.loads(ledger_path.read_text())
     assert disk["topic"] == "cancer"
+    assert disk["version"] == 2
     assert disk["entries"][0]["pmcid"] == 42
     assert disk["entries"][0]["config_paths"] == ["ROMERO3.yaml", "ROMERO3B.yaml"]
+    assert disk["claims"] == {}
 
 
 def test_discovery_ledger_read_normalizes_legacy_config_path(tmp_path: Path) -> None:
@@ -290,6 +340,19 @@ def test_discovery_ledger_read_normalizes_legacy_config_path(tmp_path: Path) -> 
     result = discovery_ledger("read", ledger_path)
 
     assert result["entries"][0]["config_paths"] == ["ROMERO3.yaml"]
+
+
+def test_discovery_ledger_release_respects_run_ownership(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "ledger.json"
+
+    discovery_ledger("claim", ledger_path, pmc_id=42, run_id="run-1")
+    denied = discovery_ledger("release", ledger_path, pmc_id=42, run_id="run-2")
+
+    assert denied["released"] is False
+    assert "error" in denied
+
+    released = discovery_ledger("release", ledger_path, pmc_id=42, run_id="run-1")
+    assert released["released"] is True
 
 
 def test_discovery_ledger_add_requires_fields(tmp_path: Path) -> None:
@@ -336,7 +399,9 @@ def test_download_pmc_oa_picks_latest_version(monkeypatch: Any, tmp_path: Path) 
     assert result["version"] == 2
     assert result["prefix"] == "PMC11370360.2"
     assert result["available_versions"] == [1, 2]
-    assert result["dest_dir"] == str(tmp_path / "PMC11370360.2")
+    assert result["artifact_root"] == str(tmp_path)
+    assert result["dest_dir"] == str(tmp_path / "source" / "PMC11370360.2")
+    assert result["source_dir"] == str(tmp_path / "source" / "PMC11370360.2")
     assert result["files"] == ["PMC11370360.2.json", "PMC11370360.2.txt", "PMC11370360.2.xml"]
 
     list_cmd, cp_cmd = captured
@@ -433,3 +498,63 @@ def test_download_pmc_oa_missing_aws_cli(monkeypatch: Any, tmp_path: Path) -> No
     result = download_pmc_oa(42, dest_dir=tmp_path)
 
     assert result == {"error": "aws CLI not found in PATH"}
+
+
+def test_download_pmc_tar_extracts_into_source_and_removes_archive(tmp_path: Path) -> None:
+    archive = tmp_path / "fixture.tar"
+    source_fixture = tmp_path / "inside.txt"
+    source_fixture.write_text("hello")
+
+    with cli.tarfile.open(archive, "w") as tar:
+        tar.add(source_fixture, arcname="nested/inside.txt")
+
+    payload = archive.read_bytes()
+
+    class FakeStream:
+        status_code = 200
+        headers = {"content-disposition": 'attachment; filename="paper.tar"'}
+
+        def __enter__(self) -> "FakeStream":
+            return self
+
+        def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+            return None
+
+        def iter_bytes(self):
+            yield payload
+
+    with patch.object(cli.httpx, "stream", return_value=FakeStream()):
+        result = download_pmc_tar(42, dest_dir=tmp_path / "paper")
+
+    assert result["status"] == "ok"
+    assert result["artifact_root"] == str(tmp_path / "paper")
+    assert result["source_dir"] == str(tmp_path / "paper" / "source")
+    assert result["files"] == ["nested/inside.txt"]
+    assert result["cleanup"]["removed"] == [str(tmp_path / "paper" / "raw" / "paper.tar")]
+    assert not (tmp_path / "paper" / "raw" / "paper.tar").exists()
+    assert (tmp_path / "paper" / "source" / "nested" / "inside.txt").read_text() == "hello"
+
+
+def test_download_url_writes_into_raw_dir(tmp_path: Path) -> None:
+    class FakeResponse:
+        headers = {"content-disposition": 'attachment; filename="table.tsv"', "content-type": "text/tab-separated-values"}
+
+        def __enter__(self) -> "FakeResponse":
+            return self
+
+        def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+            return None
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def iter_bytes(self):
+            yield b"a\tb\n1\t2\n"
+
+    with patch.object(cli.httpx, "stream", return_value=FakeResponse()):
+        result = download_url("https://example.org/table", dest_dir=tmp_path / "paper")
+
+    assert result["status"] == "ok"
+    assert result["artifact_root"] == str(tmp_path / "paper")
+    assert result["path"] == str(tmp_path / "paper" / "raw" / "table.tsv")
+    assert (tmp_path / "paper" / "raw" / "table.tsv").read_text() == "a\tb\n1\t2\n"

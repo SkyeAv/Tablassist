@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
 
-import { RESOURCE_AGENTS, createAgentTracker } from "./agent-tracker.ts"
+import { RESOURCE_AGENT_KEYS, createAgentTracker } from "./agent-tracker.ts"
 
 describe("createAgentTracker", () => {
   it("tracks agent per session", () => {
@@ -71,12 +71,36 @@ describe("needsResources", () => {
   })
 })
 
-describe("RESOURCE_AGENTS", () => {
-  it("contains exactly the-builder, the-configurator, and the-pioneer", () => {
-    expect(RESOURCE_AGENTS.size).toBe(3)
-    expect(RESOURCE_AGENTS.has("the-builder")).toBe(true)
-    expect(RESOURCE_AGENTS.has("the-configurator")).toBe(true)
-    expect(RESOURCE_AGENTS.has("the-pioneer")).toBe(true)
-    expect(RESOURCE_AGENTS.has("the-extractor")).toBe(false)
+describe("getPromptResourceKeys", () => {
+  it("returns the full bundle for the-builder", () => {
+    const tracker = createAgentTracker()
+    tracker.track("sess-1", "the-builder")
+
+    expect(tracker.getPromptResourceKeys("sess-1")).toEqual(RESOURCE_AGENT_KEYS["the-builder"] ?? [])
+  })
+
+  it("returns a smaller bundle for the-configurator and pioneer", () => {
+    const tracker = createAgentTracker()
+    tracker.track("sess-1", "the-configurator")
+    tracker.track("sess-2", "the-pioneer")
+
+    expect(tracker.getPromptResourceKeys("sess-1")).toEqual(RESOURCE_AGENT_KEYS["the-configurator"] ?? [])
+    expect(tracker.getPromptResourceKeys("sess-2")).toEqual(RESOURCE_AGENT_KEYS["the-pioneer"] ?? [])
+  })
+
+  it("returns no resources for extractor and other non-resource agents", () => {
+    const tracker = createAgentTracker()
+    tracker.track("sess-1", "the-extractor")
+    tracker.track("sess-2", "build")
+
+    expect(tracker.getPromptResourceKeys("sess-1")).toEqual([])
+    expect(tracker.getPromptResourceKeys("sess-2")).toEqual([])
+  })
+
+  it("falls back to configurator resources for unknown sessions", () => {
+    const tracker = createAgentTracker()
+
+    expect(tracker.getPromptResourceKeys("unknown")).toEqual(RESOURCE_AGENT_KEYS["the-configurator"] ?? [])
+    expect(tracker.getPromptResourceKeys(undefined)).toEqual(RESOURCE_AGENT_KEYS["the-configurator"] ?? [])
   })
 })

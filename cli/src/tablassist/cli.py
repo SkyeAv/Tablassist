@@ -1,8 +1,12 @@
+import mimetypes
 import os
 import re
 import subprocess
+import tarfile
+from datetime import date, datetime, time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union
+from urllib.parse import urlparse
 
 import fastexcel
 import httpx
@@ -24,6 +28,8 @@ from tablassist.utils import (
     get_xml_response,
     ledger_add,
     ledger_check,
+    ledger_claim,
+    ledger_release,
     load_ledger,
     parse_pmc_article_xml,
     parse_pmc_paper_summary,
@@ -41,6 +47,74 @@ else:
 CLI: App = App()
 
 
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    return value
+
+
+def _column_summary(series: pl.Series) -> dict[str, Any]:
+    dtype = series.dtype
+    non_null = series.drop_nulls()
+
+    summary: dict[str, Any] = {
+        "name": series.name,
+        "dtype": str(dtype),
+        "null_count": series.null_count(),
+        "non_null_count": non_null.len(),
+        "unique_count": series.n_unique(),
+        "sample_values": _json_safe(non_null.unique(maintain_order=True).head(5).to_list()),
+    }
+
+    if non_null.is_empty():
+        return summary
+
+    if dtype.is_numeric():
+        summary["statistics"] = _json_safe(
+            {
+                "min": non_null.min(),
+                "max": non_null.max(),
+                "mean": non_null.mean(),
+                "median": non_null.median(),
+                "std": non_null.std(),
+            }
+        )
+        return summary
+
+    if dtype == pl.String:
+        lengths = non_null.str.len_chars()
+        summary["statistics"] = {
+            "min_length": lengths.min(),
+            "max_length": lengths.max(),
+            "mean_length": lengths.mean(),
+        }
+        return summary
+
+    if dtype == pl.Boolean:
+        true_count = non_null.cast(pl.UInt8).sum()
+        false_count = non_null.len() - true_count
+        summary["statistics"] = {"true_count": true_count, "false_count": false_count}
+        return summary
+
+    if dtype.is_temporal():
+        summary["statistics"] = _json_safe({"min": non_null.min(), "max": non_null.max()})
+
+    return summary
+
+
+def _explore_dataframe(df: pl.DataFrame) -> dict[str, Any]:
+    return {
+        "shape": {"rows": df.height, "columns": df.width},
+        "schema": {name: str(dtype) for name, dtype in df.schema.items()},
+        "sample_rows": _json_safe(df.head(5).to_dicts()),
+        "columns": [_column_summary(df.get_column(name)) for name in df.columns],
+    }
+
+
 @CLI.command
 def docs_table_config() -> str:
     """Fetch Tablassert table configuration spec documentation."""
@@ -48,40 +122,53 @@ def docs_table_config() -> str:
     return get_static_content(url)
 
 
-@CLI.command
-def docs_advanced_examples() -> str:
-    """Fetch advanced table configuration examples documentation."""
-    url: str = "https://raw.githubusercontent.com/SkyeAv/Tablassert/main/docs/configuration/advanced-example.md"
-    return get_static_content(url)
-
-
-@CLI.command
-def docs_tutorial() -> str:
-    """Fetch Tablassert CLI tutorial documentation."""
-    url: str = "https://raw.githubusercontent.com/SkyeAv/Tablassert/blob/main/docs/tutorial.md"
-    return get_static_content(url)
-
-
-@CLI.command
-def example_no_sections() -> str:
-    """Fetch a production YAML config example without sections."""
-    url: str = (
-        "https://raw.githubusercontent.com/glusman-team/MOKGConfiguration/refs/heads/master/TABLE/MBKG/ALAM1.yaml"
-    )
-    return get_static_content(url)
-
-
-@CLI.command
-def example_with_sections() -> str:
-    """Fetch a production YAML config example with sections."""
-    url: str = (
-        "https://raw.githubusercontent.com/glusman-team/MOKGConfiguration/refs/heads/master/TABLE/MBKG/BLANTON1.yaml"
-    )
-    return get_static_content(url)
-
-
 TABLASSIST_USERNAME: str = os.environ.get("TABLASSIST_USERNAME", "")
 TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
+
+
+def _artifact_dirs(dest_dir: Path) -> dict[str, Path]:
+    artifact_root = dest_dir
+    raw_dir = artifact_root / "raw"
+    source_dir = artifact_root / "source"
+    derived_dir = artifact_root / "derived"
+    scratch_dir = artifact_root / "scratch"
+    for path in [artifact_root, raw_dir, source_dir, derived_dir, scratch_dir]:
+        path.mkdir(parents=True, exist_ok=True)
+    return {
+        "artifact_root": artifact_root,
+        "raw_dir": raw_dir,
+        "source_dir": source_dir,
+        "derived_dir": derived_dir,
+        "scratch_dir": scratch_dir,
+    }
+
+
+def _filename_from_headers(url: str, headers: httpx.Headers, fallback: str) -> str:
+    disposition: str = headers.get("content-disposition", "")
+    matches = re.search(r'filename="?([^";]+)"?', disposition)
+    if matches:
+        return Path(matches.group(1)).name
+
+    parsed = urlparse(url)
+    if parsed.path:
+        candidate = Path(parsed.path).name
+        if candidate:
+            return candidate
+
+    extension = mimetypes.guess_extension(headers.get("content-type", "").split(";", 1)[0].strip()) or ""
+    if extension and not fallback.endswith(extension):
+        return f"{fallback}{extension}"
+    return fallback
+
+
+def _safe_extract_tar(archive_path: Path, dest_dir: Path) -> None:
+    dest_root = dest_dir.resolve()
+    with tarfile.open(archive_path) as archive:
+        for member in archive.getmembers():
+            target = (dest_dir / member.name).resolve()
+            if os.path.commonpath([str(dest_root), str(target)]) != str(dest_root):
+                raise ValueError(f"Refusing to extract archive member outside destination: {member.name}")
+        archive.extractall(dest_dir)
 
 
 @CLI.command
@@ -94,18 +181,10 @@ def search_curies(term: str) -> Union[list[Any], dict[str, Any]]:
 
 
 @CLI.command
-def get_curie_info(curie: str) -> Union[list[Any], dict[str, Any]]:
-    """Resolve a single canonical CURIE record."""
-    url: str = "https://hypatia.systemsbiology.net/configurator-api/get-canonical-curie-info"
-    params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "curie": curie}
-
-    return get_json_response(url, params)
-
-
-@CLI.command
 def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
     """Download and extract a PMC tar archive by PMC ID."""
     url: str = "https://hypatia.systemsbiology.net/configurator-api/download-from-pmc-tars"
+    paths = _artifact_dirs(dest_dir)
 
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
@@ -115,19 +194,50 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
             error: dict[str, Any] = r.json()
             return error
 
-        d: str = r.headers.get("content-disposition", "")
-        matches: object = re.search(r"filename=(.+)", d)
-
-        filename: str = matches.group(1) if matches else "download.tar.xz"
-        p: Path = dest_dir / filename
+        filename = _filename_from_headers(url, r.headers, "download.tar.xz")
+        p: Path = paths["raw_dir"] / Path(filename).name
         with p.open("wb") as f:
             for chunk in r.iter_bytes():
                 f.write(chunk)
 
-    cmd: str = f"tar -xvf '{p}' && rm '{p}' && ls -lh '{dest_dir}'"
-    r: Any = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    _safe_extract_tar(p, paths["source_dir"])
 
-    return {"status": "ok", "stdout": r.stdout, "stderr": r.stderr}
+    files: list[str] = sorted(
+        str(path.relative_to(paths["source_dir"])) for path in paths["source_dir"].rglob("*") if path.is_file()
+    )
+    archive_path = str(p)
+    p.unlink()
+
+    return {
+        "status": "ok",
+        "pmcid": pmc_id,
+        "artifact_root": str(paths["artifact_root"]),
+        "archive_path": archive_path,
+        "source_dir": str(paths["source_dir"]),
+        "files": files,
+        "cleanup": {"removed": [archive_path]},
+    }
+
+
+@CLI.command
+def download_url(url: str, dest_dir: Path = Path("."), filename: Optional[str] = None) -> dict[str, Any]:
+    """Download a URL into a deterministic artifact directory."""
+    paths = _artifact_dirs(dest_dir)
+    with httpx.stream("GET", url, follow_redirects=True, timeout=TIMEOUT) as response:
+        response.raise_for_status()
+        resolved_name = filename or _filename_from_headers(url, response.headers, "download")
+        target = paths["raw_dir"] / resolved_name
+        with target.open("wb") as f:
+            for chunk in response.iter_bytes():
+                f.write(chunk)
+
+    return {
+        "status": "ok",
+        "url": url,
+        "artifact_root": str(paths["artifact_root"]),
+        "path": str(target),
+        "content_type": response.headers.get("content-type", ""),
+    }
 
 
 @CLI.command
@@ -309,6 +419,26 @@ def preview_csv(file: Path, n_rows: int, separator: str = ",") -> dict[str, Any]
 
 
 @CLI.command
+def describe_excel(
+    file: Path, sheet_name: str, engine: Literal["calamine", "openpyxl", "xlsx2csv"] = "calamine"
+) -> dict[str, Any]:
+    """Inspect an Excel sheet with schema, sample rows, and per-column profiles."""
+    df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
+    summary = _explore_dataframe(df)
+    summary["sheet_name"] = sheet_name
+    return summary
+
+
+@CLI.command
+def describe_csv(file: Path, separator: str = ",") -> dict[str, Any]:
+    """Inspect a CSV/tabular file with schema, sample rows, and per-column profiles."""
+    df: pl.DataFrame = pl.read_csv(source=file, separator=separator, infer_schema_length=None)
+    summary = _explore_dataframe(df)
+    summary["separator"] = separator
+    return summary
+
+
+@CLI.command
 def pmc_oa_readme() -> str:
     """Fetch the PMC Open Access dataset README with download instructions and file format details."""
     url: str = "https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/"
@@ -386,7 +516,8 @@ def download_pmc_oa(pmc_id: int, dest_dir: Path = Path("."), version: Optional[i
     chosen_version: int = chosen[0]
     chosen_prefix: str = chosen[1]
 
-    target_dir: Path = dest_dir / chosen_prefix
+    paths = _artifact_dirs(dest_dir)
+    target_dir: Path = paths["source_dir"] / chosen_prefix
     target_dir.mkdir(parents=True, exist_ok=True)
 
     cp_cmd: list[str] = [
@@ -419,7 +550,9 @@ def download_pmc_oa(pmc_id: int, dest_dir: Path = Path("."), version: Optional[i
         "pmcid": pmc_id,
         "version": chosen_version,
         "prefix": chosen_prefix,
+        "artifact_root": str(paths["artifact_root"]),
         "dest_dir": str(target_dir),
+        "source_dir": str(target_dir),
         "files": files,
         "available_versions": available,
     }
@@ -505,7 +638,7 @@ def get_pmc_summary(pmc_id: int) -> dict[str, Any]:
 
 @CLI.command
 def discovery_ledger(
-    action: Literal["read", "add", "check"],
+    action: Literal["read", "add", "check", "claim", "release"],
     ledger_path: Path,
     pmc_id: Optional[int] = None,
     status: Optional[str] = None,
@@ -513,15 +646,15 @@ def discovery_ledger(
     topic: Optional[str] = None,
     config_path: Optional[str] = None,
     config_paths: Optional[list[str]] = None,
+    artifact_root: Optional[str] = None,
+    agent_name: Optional[str] = None,
+    run_id: Optional[str] = None,
+    lease_seconds: int = 1800,
 ) -> dict[str, Any]:
     """Manage the discovery progress ledger (read/add/check entries)."""
     ledger = load_ledger(ledger_path, topic)
     if ledger is None or "error" in ledger:
         return ledger or {"error": "Failed to load ledger"}
-
-    for entry in ledger.get("entries", []):
-        if "config_paths" not in entry and entry.get("config_path"):
-            entry["config_paths"] = [entry["config_path"]]
 
     if action == "read":
         return ledger
@@ -531,11 +664,31 @@ def discovery_ledger(
             return {"error": "check requires pmc_id"}
         return ledger_check(ledger, pmc_id)
 
+    if action == "claim":
+        if pmc_id is None:
+            return {"error": "claim requires pmc_id"}
+        return ledger_claim(ledger_path, topic, pmc_id, agent_name, run_id, lease_seconds)
+
+    if action == "release":
+        if pmc_id is None:
+            return {"error": "release requires pmc_id"}
+        return ledger_release(ledger_path, topic, pmc_id, run_id)
+
     if action == "add":
         if pmc_id is None or status is None:
             return {"error": "add requires pmc_id and status"}
         normalized_config_paths: list[str] = config_paths or ([config_path] if config_path else [])
-        return ledger_add(ledger_path, ledger, pmc_id, status, summary, topic, normalized_config_paths or None)
+        return ledger_add(
+            ledger_path,
+            pmc_id,
+            status,
+            summary,
+            topic,
+            normalized_config_paths or None,
+            artifact_root,
+            agent_name,
+            run_id,
+        )
 
 
 def serve() -> None:

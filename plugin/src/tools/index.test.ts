@@ -7,21 +7,22 @@ describe("createAllTools", () => {
     const tools = createAllTools(async (command, args) => `${command}:${args.join(",")}`)
 
     expect(Object.keys(tools).sort()).toEqual([
+      "describe-csv",
+      "describe-excel",
       "discovery-ledger",
       "docs-category",
       "docs-predicate",
       "docs-qualifier",
       "download-pmc-oa",
       "download-pmc-tar",
+      "download-url",
       "excel-sheets",
       "extract-text",
       "extract-text-semantic",
-      "get-curie-info",
       "get-pmc-summary",
       "list-categories",
       "list-predicates",
       "list-qualifiers",
-      "pmc-oa-readme",
       "preview-csv",
       "preview-excel",
       "resolve-taxon-id",
@@ -31,7 +32,6 @@ describe("createAllTools", () => {
       "section-schema",
       "validate-config-file",
       "validate-config-str",
-      "validate-section-str",
     ])
   })
 })

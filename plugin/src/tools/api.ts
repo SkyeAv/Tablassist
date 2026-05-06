@@ -10,13 +10,14 @@ export function createApiTools(cli: CliRunner) {
     "search-curies": createCliTool("Search CURIE candidates by term", { term: z.string() }, (args: { term: string }) =>
       cli("search-curies", [args.term]),
     ),
-    "get-curie-info": createCliTool(
-      "Resolve a single canonical CURIE record",
-      { curie: z.string() },
-      (args: { curie: string }) => cli("get-curie-info", [args.curie]),
+    "download-url": createCliTool(
+      "Download a URL into a deterministic artifact directory and return the saved path.",
+      { url: z.string(), dest_dir: z.string().optional(), filename: z.string().optional() },
+      (args: { url: string; dest_dir?: string; filename?: string }) =>
+        cli("download-url", [args.url, ...(args.dest_dir ? [args.dest_dir] : []), ...(args.filename ? ["--filename", args.filename] : [])]),
     ),
     "download-pmc-tar": createCliTool(
-      "Download and extract a PMC tar archive to a directory. Returns the extraction log and directory contents. Note: You must subsequently use tools like 'extract-text' or 'extract-text-semantic' to read the extracted files.",
+      "Download and extract a PMC tar archive into deterministic raw/source artifact directories. Returns the artifact root, extracted source directory, created files, and the specific archive cleanup it performed.",
       { pmc_id: z.number().int(), dest_dir: z.string().optional() },
       (args: { pmc_id: number; dest_dir?: string }) =>
         cli("download-pmc-tar", [String(args.pmc_id), ...(args.dest_dir ? [args.dest_dir] : [])]),
@@ -32,13 +33,8 @@ export function createApiTools(cli: CliRunner) {
       { organism_name: z.string() },
       (args: { organism_name: string }) => cli("resolve-taxon-id", [args.organism_name]),
     ),
-    "pmc-oa-readme": createCliTool(
-      "Fetch the PMC Open Access dataset README with download instructions and file format details",
-      {},
-      () => cli("pmc-oa-readme", []),
-    ),
     "download-pmc-oa": createCliTool(
-      "Download all files for a PMC article (XML, TXT, PDF, JSON metadata, media, supplements) from the PMC Open Access S3 bucket via the AWS CLI. Picks the latest article version unless one is supplied. Returns the destination directory, version chosen, and the list of downloaded files. Note: You must subsequently use tools like 'extract-text' or 'extract-text-semantic' to read the downloaded files.",
+      "Download all files for a PMC article (XML, TXT, PDF, JSON metadata, media, supplements) from the PMC Open Access S3 bucket into a deterministic source directory under the requested artifact root. Returns the destination directory, version chosen, and created file list.",
       { pmc_id: z.number().int(), dest_dir: z.string().optional(), version: z.number().int().optional() },
       (args: { pmc_id: number; dest_dir?: string; version?: number }) =>
         cli("download-pmc-oa", [
