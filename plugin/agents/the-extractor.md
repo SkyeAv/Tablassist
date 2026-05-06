@@ -1,6 +1,7 @@
 ---
 description: Tablassert paper and data extraction specialist
 mode: subagent
+color: "#EC4899"
 temperature: 0.2
 permission:
   edit: deny

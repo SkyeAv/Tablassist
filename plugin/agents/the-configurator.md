@@ -1,6 +1,7 @@
 ---
 description: Primary Tablassert configuration orchestrator
 mode: primary
+color: "#8B5CF6"
 temperature: 0.3
 permission:
   edit: deny

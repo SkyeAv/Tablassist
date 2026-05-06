@@ -1,6 +1,7 @@
 ---
 description: Autonomous paper discovery and configuration pipeline controller
 mode: primary
+color: "#C026D3"
 temperature: 0.3
 maxSteps: 200
 permission:

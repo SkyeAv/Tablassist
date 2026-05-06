@@ -1,6 +1,6 @@
 {
   "name": "@skyeav/tablassist",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "OpenCode plugin for Tablassert table configuration — entity resolution, YAML validation, and Biolink documentation tools.",
   "module": "./src/index.ts",
   "type": "module",

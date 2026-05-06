@@ -1,6 +1,7 @@
 ---
 description: Scientific paper discovery and triage specialist
 mode: subagent
+color: "#EF4444"
 temperature: 0.2
 maxSteps: 15
 permission:

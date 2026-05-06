@@ -1,6 +1,7 @@
 ---
 description: Tablassert YAML configuration builder
 mode: subagent
+color: "#A855F7"
 temperature: 0.1
 maxSteps: 30
 permission:
