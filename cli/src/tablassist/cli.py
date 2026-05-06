@@ -298,16 +298,6 @@ def section_schema() -> dict[str, Any]:
 
 
 @CLI.command
-def validate_section_str(yaml_string: str) -> dict[str, Any]:
-    """Validate a single YAML section dict from a string, without template/sections merging."""
-    raw: Any = parse_yaml_string(yaml_string)
-    if isinstance(raw, dict) and "error" in raw:
-        return raw
-
-    return validate_section(raw)
-
-
-@CLI.command
 def validate_config_str(yaml_string: str) -> Union[dict[str, Any], list[dict[str, Any]]]:
     """Validate a full YAML config string with top-level template and optional sections keys."""
     raw: Any = parse_yaml_string(yaml_string)
@@ -442,13 +432,6 @@ def describe_csv(file: Path, separator: str = ",") -> dict[str, Any]:
     summary = _explore_dataframe(df)
     summary["separator"] = separator
     return summary
-
-
-@CLI.command
-def pmc_oa_readme() -> str:
-    """Fetch the PMC Open Access dataset README with download instructions and file format details."""
-    url: str = "https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/"
-    return get_html_as_markdown(url)
 
 
 PMC_OA_BUCKET: str = "pmc-oa-opendata"
