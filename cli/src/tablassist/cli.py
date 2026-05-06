@@ -17,13 +17,13 @@ from tablassert.models import Section
 from tablassist.utils import (
     TIMEOUT,
     build_semantic_converter,
-    ledger_add,
-    ledger_check,
     get_biolink_html_documentation,
     get_html_as_markdown,
     get_json_response,
     get_static_content,
     get_xml_response,
+    ledger_add,
+    ledger_check,
     load_ledger,
     parse_pmc_article_xml,
     parse_pmc_paper_summary,
@@ -536,8 +536,6 @@ def discovery_ledger(
             return {"error": "add requires pmc_id and status"}
         normalized_config_paths: list[str] = config_paths or ([config_path] if config_path else [])
         return ledger_add(ledger_path, ledger, pmc_id, status, summary, topic, normalized_config_paths or None)
-
-    return {"error": f"unknown action: {action}"}
 
 
 def serve() -> None:
