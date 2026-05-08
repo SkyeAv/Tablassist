@@ -23,7 +23,7 @@ export function createDiscoverTools(cli: CliRunner) {
       (args: { pmc_id: number }) => cli("get-pmc-summary", [String(args.pmc_id)]),
     ),
     "discovery-ledger": createCliTool(
-      "Read or mutate the discovery ledger (read/add/check/claim/release). When to use: the-pioneer batch workflows for cross-session state and concurrent claim coordination. On `add`, pass paper_url (from search-pmc/get-pmc-summary) and s3_uri (from download-pmc-oa) so downstream readers cite real, observed URLs. If paper_url is omitted, the ledger defaults to the canonical PMC URL for the given pmc_id. Returns action-shaped dict.",
+      "Read or mutate the discovery ledger (read/add/check/claim/release). When to use: the-pioneer batch workflows for cross-session state and concurrent claim coordination. On `add`, pass paper_url (from search-pmc/get-pmc-summary) and s3_uri (from download-pmc-oa) so downstream readers cite real, observed URLs. If paper_url is omitted, the ledger defaults to the canonical PMC URL for the given pmc_id. Pass datalake_manifest (the array returned by consolidate-datalake) so the ledger records which files were relocated. Returns action-shaped dict.",
       {
         action: z.enum(["read", "add", "check", "claim", "release"]),
         ledger_path: z.string(),
@@ -39,6 +39,15 @@ export function createDiscoverTools(cli: CliRunner) {
         lease_seconds: z.number().int().positive().optional(),
         paper_url: z.string().optional(),
         s3_uri: z.string().optional(),
+        datalake_manifest: z
+          .array(
+            z.object({
+              config_path: z.string(),
+              original_path: z.string(),
+              datalake_path: z.string(),
+            }),
+          )
+          .optional(),
       },
       (args: {
         action: "read" | "add" | "check" | "claim" | "release"
@@ -55,6 +64,7 @@ export function createDiscoverTools(cli: CliRunner) {
         lease_seconds?: number
         paper_url?: string
         s3_uri?: string
+        datalake_manifest?: { config_path: string; original_path: string; datalake_path: string }[]
       }) =>
         cli("discovery-ledger", [
           args.action,
@@ -71,6 +81,25 @@ export function createDiscoverTools(cli: CliRunner) {
           ...(args.lease_seconds !== undefined ? ["--lease-seconds", String(args.lease_seconds)] : []),
           ...(args.paper_url ? ["--paper-url", args.paper_url] : []),
           ...(args.s3_uri ? ["--s3-uri", args.s3_uri] : []),
+          ...(args.datalake_manifest?.length ? ["--datalake-manifest", JSON.stringify(args.datalake_manifest)] : []),
+        ]),
+    ),
+    "consolidate-datalake": createCliTool(
+      "Move files referenced by `source.local` in one or more YAML configs into a flat `./DATALAKE/` next to the configs, renaming each `PMC{pmc_id}_{basename}`, and rewrite `source.local` to `./DATALAKE/PMC{pmc_id}_{basename}`. When to use: the-pioneer's per-paper finalization, after `the-builder` writes configs but before `discovery-ledger add`. Idempotent — safe to re-run. Returns `{status, datalake_root, manifest: [{config_path, original_path, datalake_path}]}`. Forward `manifest` verbatim to `discovery-ledger add` as `datalake_manifest`.",
+      {
+        yaml_files: z.array(z.string()).min(1),
+        pmc_id: z.number().int(),
+        artifact_root: z.string(),
+        launch_dir: z.string().optional(),
+      },
+      (args: { yaml_files: string[]; pmc_id: number; artifact_root: string; launch_dir?: string }) =>
+        cli("consolidate-datalake", [
+          ...args.yaml_files,
+          "--pmc-id",
+          String(args.pmc_id),
+          "--artifact-root",
+          args.artifact_root,
+          ...(args.launch_dir ? ["--launch-dir", args.launch_dir] : []),
         ]),
     ),
   }

@@ -32,6 +32,7 @@ Your job is to run a continuous loop: find papers on a topic, extract tabular su
 ## Your Tools
 - `search-pmc` — search PMC for candidate papers
 - `get-pmc-summary` — inspect a paper's supplement list
+- `consolidate-datalake` — relocate files referenced by `source.local` into a flat `./DATALAKE/` next to the configs
 - `discovery-ledger` — read/add/check entries on the progress ledger
 
 Heavy lifting happens in subagents (`the-scout`, `the-extractor`, `the-builder`). You never download data, preview files, or write YAML yourself.
@@ -77,7 +78,8 @@ This loop runs for many iterations. Keep only:
          - Otherwise proceed to (f).
        - Discard search results, docs output, and detailed previews after the decision; do not carry them across iterations.
     f. Delegate to `the-builder`: "Create validated Tablassert config file(s) in `{launch_dir}/` from this summary: {extractor's summary}. Use uppercase alphanumeric-only filename stems. Prefer multiple smaller configs when one paper or supplement is easier to represent that way."
-    g. Call `discovery-ledger add` with status `success` (or `failed` if the builder could not produce valid configs), a one-line summary, `config_paths`, `artifact_root`, your run identifier, the scout's `paper_url`, and the extractor's `s3_uri` if the OA path was taken. These give downstream readers (and the human) a real, observed URL to cite.
+    f.5. Call `consolidate-datalake` with `pmc_id`, `artifact_root` set to `{topic_ledger_dir}/data/PMC{id}/`, `launch_dir` set to the launch directory, and `yaml_files` set to the config paths the builder returned. This relocates only the files referenced by each YAML's `source.local` into a flat `./DATALAKE/` next to the configs, leaving unreferenced paper artifacts untouched, and rewrites each `source.local` to `./DATALAKE/PMC{id}_{basename}`. Capture the returned `manifest`. If the call returns `ERROR:` or a payload with `error`, mark the paper `failed` in the ledger and skip the rest of this paper.
+    g. Call `discovery-ledger add` with status `success` (or `failed` if the builder could not produce valid configs), a one-line summary, `config_paths`, `artifact_root`, your run identifier, the scout's `paper_url`, the extractor's `s3_uri` if the OA path was taken, and the `datalake_manifest` returned by `consolidate-datalake`. These give downstream readers (and the human) a real, observed URL to cite, plus a record of which files were relocated.
     h. Report in minimal tree style, for example:
        `{launch_dir}/`
        `|- {normalized_stem}.yaml`

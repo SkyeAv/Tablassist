@@ -7,6 +7,7 @@ describe("createAllTools", () => {
     const tools = createAllTools(async (command, args) => `${command}:${args.join(",")}`)
 
     expect(Object.keys(tools).sort()).toEqual([
+      "consolidate-datalake",
       "describe-csv",
       "describe-excel",
       "discovery-ledger",

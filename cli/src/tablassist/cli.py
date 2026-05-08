@@ -1,6 +1,9 @@
+import hashlib
+import json
 import mimetypes
 import os
 import re
+import shutil
 import subprocess
 import tarfile
 from datetime import date, datetime, time
@@ -558,6 +561,42 @@ PMC_ESUMMARY_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.
 PMC_EFETCH_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 
+DATALAKE_DIRNAME: str = "DATALAKE"
+
+
+def hash_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def datalake_target(launch_dir: Path, pmc_id: int, original: Path) -> tuple[Path, str]:
+    target_name: str = f"PMC{int(pmc_id)}_{original.name}"
+    return launch_dir / DATALAKE_DIRNAME / target_name, f"./{DATALAKE_DIRNAME}/{target_name}"
+
+
+def iter_source_blocks(raw: Any) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = []
+    if not isinstance(raw, dict):
+        return blocks
+    template = raw.get("template")
+    if isinstance(template, dict):
+        src = template.get("source")
+        if isinstance(src, dict):
+            blocks.append(src)
+    sections = raw.get("sections")
+    if isinstance(sections, list):
+        for sec in sections:
+            if not isinstance(sec, dict):
+                continue
+            src = sec.get("source")
+            if isinstance(src, dict):
+                blocks.append(src)
+    return blocks
+
+
 def _get_ncbi_result_error(payload: dict[str, Any]) -> Optional[str]:
     if error := payload.get("error") or payload.get("ERROR"):
         return str(error)
@@ -632,6 +671,106 @@ def get_pmc_summary(pmc_id: int) -> dict[str, Any]:
 
 
 @CLI.command
+def consolidate_datalake(
+    yaml_files: list[Path], pmc_id: int, artifact_root: Path, launch_dir: Path = Path(".")
+) -> dict[str, Any]:
+    """Move files referenced by `source.local` into a flat DATALAKE/ next to the configs.
+
+    For each YAML, every unique `source.local` value is resolved relative to `artifact-root`
+    (or used as-is if absolute), moved into `{launch-dir}/DATALAKE/PMC{pmc_id}_{basename}`,
+    and the YAML's `source.local` is rewritten to `./DATALAKE/PMC{pmc_id}_{basename}`. Files
+    already pointing inside `./DATALAKE/` are left in place (idempotent). Unreferenced files
+    under `artifact-root` are not touched. The post-rewrite YAML is re-validated.
+    """
+    datalake_dir: Path = launch_dir / DATALAKE_DIRNAME
+    moves: dict[str, dict[str, str]] = {}
+    manifest: list[dict[str, str]] = []
+
+    for yaml_file in yaml_files:
+        if not yaml_file.is_file():
+            return {"error": f"YAML file not found: {yaml_file}"}
+
+        raw: Any = parse_yaml_string(yaml_file.read_text())
+        if isinstance(raw, dict) and set(raw.keys()) == {"error"}:
+            return {"error": f"Failed to parse {yaml_file}: {raw['error']}"}
+
+        replacements: dict[str, str] = {}
+        for src in iter_source_blocks(raw):
+            local: Any = src.get("local")
+            if not isinstance(local, str) or local in replacements:
+                continue
+
+            already_prefix: str = f"./{DATALAKE_DIRNAME}/"
+            if local.startswith(already_prefix):
+                rel: str = local[len(already_prefix) :]
+                existing: Path = datalake_dir / rel
+                if not existing.is_file():
+                    return {"error": f"YAML {yaml_file} references {local} but the file is missing from DATALAKE"}
+                replacements[local] = local
+                manifest.append({"config_path": str(yaml_file), "original_path": str(existing), "datalake_path": local})
+                continue
+
+            cached: Optional[dict[str, str]] = moves.get(local)
+            if cached is not None:
+                replacements[local] = cached["datalake_path"]
+                manifest.append(
+                    {
+                        "config_path": str(yaml_file),
+                        "original_path": cached["original_path"],
+                        "datalake_path": cached["datalake_path"],
+                    }
+                )
+                continue
+
+            original_resolved: Path = Path(local)
+            if not original_resolved.is_absolute():
+                original_resolved = artifact_root / original_resolved
+
+            if not original_resolved.is_file():
+                return {"error": f"Source file not found for {yaml_file}: {original_resolved}"}
+
+            target, rewritten = datalake_target(launch_dir, pmc_id, original_resolved)
+            datalake_dir.mkdir(parents=True, exist_ok=True)
+
+            if target.exists():
+                if target.resolve() == original_resolved.resolve():
+                    pass
+                elif hash_file(target) != hash_file(original_resolved):
+                    return {
+                        "error": (
+                            f"DATALAKE collision: {target} already exists with different content than {original_resolved}"
+                        )
+                    }
+                else:
+                    original_resolved.unlink()
+            else:
+                shutil.move(str(original_resolved), str(target))
+
+            replacements[local] = rewritten
+            moves[local] = {"original_path": str(original_resolved), "datalake_path": rewritten}
+            manifest.append(
+                {"config_path": str(yaml_file), "original_path": str(original_resolved), "datalake_path": rewritten}
+            )
+
+        if replacements:
+            for src in iter_source_blocks(raw):
+                local = src.get("local")
+                if isinstance(local, str) and local in replacements:
+                    src["local"] = replacements[local]
+            yaml_file.write_text(yaml.safe_dump(raw, sort_keys=False))  # pyright: ignore
+
+    for yaml_file in yaml_files:
+        validation: Any = validate_config_file(yaml_file)
+        if isinstance(validation, dict) and "error" in validation:
+            return {
+                "error": f"Validation failed for {yaml_file} after consolidation: {validation['error']}",
+                "manifest": manifest,
+            }
+
+    return {"status": "ok", "datalake_root": str(datalake_dir), "manifest": manifest}
+
+
+@CLI.command
 def discovery_ledger(
     action: Literal["read", "add", "check", "claim", "release"],
     ledger_path: Path,
@@ -647,6 +786,7 @@ def discovery_ledger(
     lease_seconds: int = 1800,
     paper_url: Optional[str] = None,
     s3_uri: Optional[str] = None,
+    datalake_manifest: Optional[str] = None,
 ) -> dict[str, Any]:
     """Manage the discovery progress ledger (read/add/check entries)."""
     ledger = load_ledger(ledger_path, topic)
@@ -675,6 +815,36 @@ def discovery_ledger(
         if pmc_id is None or status is None:
             return {"error": "add requires pmc_id and status"}
         normalized_config_paths: list[str] = config_paths or ([config_path] if config_path else [])
+        parsed_manifest: Optional[list[dict[str, str]]] = None
+        if datalake_manifest is not None:
+            try:
+                raw_manifest: Any = json.loads(datalake_manifest)
+            except json.JSONDecodeError as e:
+                return {"error": f"datalake_manifest is not valid JSON: {e}"}
+            if not isinstance(raw_manifest, list):
+                return {"error": "datalake_manifest must be a JSON array"}
+            parsed_manifest = []
+            for item in raw_manifest:
+                if not isinstance(item, dict):
+                    return {"error": "datalake_manifest entries must be objects"}
+                config_path_value = item.get("config_path")
+                original_path_value = item.get("original_path")
+                datalake_path_value = item.get("datalake_path")
+                if not (
+                    isinstance(config_path_value, str)
+                    and isinstance(original_path_value, str)
+                    and isinstance(datalake_path_value, str)
+                ):
+                    return {
+                        "error": "datalake_manifest entries require string config_path, original_path, datalake_path"
+                    }
+                parsed_manifest.append(
+                    {
+                        "config_path": config_path_value,
+                        "original_path": original_path_value,
+                        "datalake_path": datalake_path_value,
+                    }
+                )
         return ledger_add(
             ledger_path,
             pmc_id,
@@ -687,6 +857,7 @@ def discovery_ledger(
             run_id,
             paper_url=paper_url,
             s3_uri=s3_uri,
+            datalake_manifest=parsed_manifest,
         )
 
 

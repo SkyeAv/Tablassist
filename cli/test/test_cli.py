@@ -7,7 +7,9 @@ from unittest.mock import patch
 
 import polars as pl
 import tablassist.cli as cli
+import yaml
 from tablassist.cli import (
+    consolidate_datalake,
     describe_csv,
     describe_excel,
     discovery_ledger,
@@ -554,3 +556,189 @@ def test_download_url_writes_into_raw_dir(tmp_path: Path) -> None:
     assert result["artifact_root"] == str(tmp_path / "paper")
     assert result["path"] == str(tmp_path / "paper" / "raw" / "table.tsv")
     assert (tmp_path / "paper" / "raw" / "table.tsv").read_text() == "a\tb\n1\t2\n"
+
+
+def write_pioneer_yaml(path: Path, local: str, sections: list[dict[str, Any]] | None = None) -> None:
+    config: dict[str, Any] = {
+        "template": {
+            "source": {"kind": "text", "local": local, "url": "https://example.org/x.csv"},
+            "statement": {"subject": {"encoding": "A", "method": "column"}, "object": {"encoding": "Gene"}},
+            "provenance": {"publication": "PMC42", "contributors": [{"name": "Test", "date": "2026-04-02"}]},
+        }
+    }
+    if sections is not None:
+        config["sections"] = sections
+    path.write_text(yaml.safe_dump(config, sort_keys=False))
+
+
+def test_consolidate_datalake_moves_file_and_rewrites_yaml(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts" / "PMC42"
+    (artifact_root / "source").mkdir(parents=True)
+    src = artifact_root / "source" / "table1.csv"
+    src.write_text("gene,score\nBRCA1,0.91\n")
+
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    yaml_path = launch_dir / "ROMERO3.yaml"
+    write_pioneer_yaml(yaml_path, "source/table1.csv")
+
+    result = consolidate_datalake([yaml_path], pmc_id=42, artifact_root=artifact_root, launch_dir=launch_dir)
+
+    assert result["status"] == "ok"
+    assert result["datalake_root"] == str(launch_dir / "DATALAKE")
+
+    target = launch_dir / "DATALAKE" / "PMC42_table1.csv"
+    assert target.is_file()
+    assert target.read_text() == "gene,score\nBRCA1,0.91\n"
+    assert not src.exists()
+
+    rewritten = yaml.safe_load(yaml_path.read_text())
+    assert rewritten["template"]["source"]["local"] == "./DATALAKE/PMC42_table1.csv"
+
+    assert result["manifest"] == [
+        {"config_path": str(yaml_path), "original_path": str(src), "datalake_path": "./DATALAKE/PMC42_table1.csv"}
+    ]
+
+
+def test_consolidate_datalake_dedupes_shared_file_across_yamls(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "artifacts" / "PMC7"
+    (artifact_root / "source").mkdir(parents=True)
+    src = artifact_root / "source" / "shared.csv"
+    src.write_text("a,b\n1,2\n")
+
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    a = launch_dir / "ALPHA.yaml"
+    b = launch_dir / "BETA.yaml"
+    write_pioneer_yaml(a, "source/shared.csv")
+    write_pioneer_yaml(b, "source/shared.csv")
+
+    result = consolidate_datalake([a, b], pmc_id=7, artifact_root=artifact_root, launch_dir=launch_dir)
+
+    assert result["status"] == "ok"
+    assert (launch_dir / "DATALAKE" / "PMC7_shared.csv").is_file()
+    for cfg in (a, b):
+        rewritten = yaml.safe_load(cfg.read_text())
+        assert rewritten["template"]["source"]["local"] == "./DATALAKE/PMC7_shared.csv"
+
+    config_paths = sorted(item["config_path"] for item in result["manifest"])
+    assert config_paths == sorted([str(a), str(b)])
+
+
+def test_consolidate_datalake_handles_section_overrides(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "PMC9"
+    (artifact_root / "source").mkdir(parents=True)
+    base = artifact_root / "source" / "base.csv"
+    extra = artifact_root / "source" / "extra.csv"
+    base.write_text("x\n1\n")
+    extra.write_text("y\n2\n")
+
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    yaml_path = launch_dir / "GAMMA.yaml"
+    write_pioneer_yaml(yaml_path, "source/base.csv", sections=[{"source": {"local": "source/extra.csv"}}])
+
+    result = consolidate_datalake([yaml_path], pmc_id=9, artifact_root=artifact_root, launch_dir=launch_dir)
+
+    assert result["status"] == "ok"
+    assert (launch_dir / "DATALAKE" / "PMC9_base.csv").is_file()
+    assert (launch_dir / "DATALAKE" / "PMC9_extra.csv").is_file()
+
+    rewritten = yaml.safe_load(yaml_path.read_text())
+    assert rewritten["template"]["source"]["local"] == "./DATALAKE/PMC9_base.csv"
+    assert rewritten["sections"][0]["source"]["local"] == "./DATALAKE/PMC9_extra.csv"
+
+
+def test_consolidate_datalake_is_idempotent(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "PMC1"
+    (artifact_root / "source").mkdir(parents=True)
+    (artifact_root / "source" / "t.csv").write_text("a\n1\n")
+
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    yaml_path = launch_dir / "DELTA.yaml"
+    write_pioneer_yaml(yaml_path, "source/t.csv")
+
+    first = consolidate_datalake([yaml_path], pmc_id=1, artifact_root=artifact_root, launch_dir=launch_dir)
+    assert first["status"] == "ok"
+
+    second = consolidate_datalake([yaml_path], pmc_id=1, artifact_root=artifact_root, launch_dir=launch_dir)
+    assert second["status"] == "ok"
+    assert second["manifest"][0]["datalake_path"] == "./DATALAKE/PMC1_t.csv"
+    target = launch_dir / "DATALAKE" / "PMC1_t.csv"
+    assert target.read_text() == "a\n1\n"
+
+
+def test_consolidate_datalake_collision_with_different_content(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "PMC2"
+    (artifact_root / "source").mkdir(parents=True)
+    src = artifact_root / "source" / "c.csv"
+    src.write_text("incoming\n")
+
+    launch_dir = tmp_path / "launch"
+    (launch_dir / "DATALAKE").mkdir(parents=True)
+    (launch_dir / "DATALAKE" / "PMC2_c.csv").write_text("preexisting different content\n")
+
+    yaml_path = launch_dir / "EPSILON.yaml"
+    write_pioneer_yaml(yaml_path, "source/c.csv")
+
+    result = consolidate_datalake([yaml_path], pmc_id=2, artifact_root=artifact_root, launch_dir=launch_dir)
+
+    assert "error" in result
+    assert "DATALAKE collision" in result["error"]
+    assert src.exists()
+
+
+def test_consolidate_datalake_missing_source_errors(tmp_path: Path) -> None:
+    artifact_root = tmp_path / "PMC3"
+    artifact_root.mkdir()
+    launch_dir = tmp_path / "launch"
+    launch_dir.mkdir()
+    yaml_path = launch_dir / "ZETA.yaml"
+    write_pioneer_yaml(yaml_path, "source/missing.csv")
+
+    result = consolidate_datalake([yaml_path], pmc_id=3, artifact_root=artifact_root, launch_dir=launch_dir)
+
+    assert "error" in result
+    assert "Source file not found" in result["error"]
+
+
+def test_discovery_ledger_persists_datalake_manifest(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "ledger.json"
+    manifest = [
+        {
+            "config_path": "ALPHA.yaml",
+            "original_path": "/tmp/PMC42/source/t.csv",
+            "datalake_path": "./DATALAKE/PMC42_t.csv",
+        }
+    ]
+
+    added = discovery_ledger(
+        "add",
+        ledger_path,
+        pmc_id=42,
+        status="success",
+        summary="ok",
+        topic="cancer",
+        config_paths=["ALPHA.yaml"],
+        artifact_root=".ledger/cancer/data/PMC42",
+        agent_name="the-pioneer",
+        run_id="run-1",
+        datalake_manifest=json.dumps(manifest),
+    )
+    assert added["added"]["datalake_manifest"] == manifest
+
+    disk = json.loads(ledger_path.read_text())
+    assert disk["entries"][0]["datalake_manifest"] == manifest
+
+    reread = discovery_ledger("read", ledger_path)
+    assert reread["entries"][0]["datalake_manifest"] == manifest
+
+
+def test_discovery_ledger_rejects_invalid_datalake_manifest(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "ledger.json"
+    bad = discovery_ledger(
+        "add", ledger_path, pmc_id=42, status="success", topic="cancer", run_id="run-1", datalake_manifest="not json"
+    )
+    assert "error" in bad
+    assert "datalake_manifest" in bad["error"]

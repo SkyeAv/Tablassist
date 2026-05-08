@@ -203,6 +203,23 @@ def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str,
             entry["paper_url"] = raw_entry["paper_url"]
         if isinstance(raw_entry.get("s3_uri"), str):
             entry["s3_uri"] = raw_entry["s3_uri"]
+        raw_manifest = raw_entry.get("datalake_manifest")
+        if isinstance(raw_manifest, list):
+            normalized_manifest: list[dict[str, str]] = []
+            for item in raw_manifest:
+                if not isinstance(item, dict):
+                    continue
+                config_path = item.get("config_path")
+                original_path = item.get("original_path")
+                datalake_path = item.get("datalake_path")
+                if not (
+                    isinstance(config_path, str) and isinstance(original_path, str) and isinstance(datalake_path, str)
+                ):
+                    continue
+                normalized_manifest.append(
+                    {"config_path": config_path, "original_path": original_path, "datalake_path": datalake_path}
+                )
+            entry["datalake_manifest"] = normalized_manifest
         if isinstance(raw_entry.get("completed_at"), str):
             entry["completed_at"] = raw_entry["completed_at"]
         elif entry["status"] not in {"claimed", "in-progress"}:
@@ -380,6 +397,7 @@ def ledger_add(
     run_id: Optional[str],
     paper_url: Optional[str] = None,
     s3_uri: Optional[str] = None,
+    datalake_manifest: Optional[list[dict[str, str]]] = None,
 ) -> dict[str, Any]:
     def _add(ledger: dict[str, Any]) -> dict[str, Any]:
         now = _utc_now_iso()
@@ -403,6 +421,15 @@ def ledger_add(
             entry["paper_url"] = pmc_paper_url(int(pmc_id))
         if s3_uri:
             entry["s3_uri"] = s3_uri
+        if datalake_manifest is not None:
+            entry["datalake_manifest"] = [
+                {
+                    "config_path": str(item["config_path"]),
+                    "original_path": str(item["original_path"]),
+                    "datalake_path": str(item["datalake_path"]),
+                }
+                for item in datalake_manifest
+            ]
         if status not in {"claimed", "in-progress"}:
             entry["completed_at"] = now
 
