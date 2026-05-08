@@ -13,7 +13,7 @@ export function createApiTools(cli: CliRunner) {
       (args: { term: string }) => cli("search-curies", [args.term]),
     ),
     "download-url": createCliTool(
-      "Download a URL into the artifact directory. When to use: web/publisher fallback after both PMC download tools fail. Returns {path, content_type}.",
+      "Download a URL into the artifact directory. When to use: web/publisher fallback after both PMC download tools fail. Pass URLs that came from a real tool response (paper_url, supplement url, s3_https_uri, scraped href) — never construct or guess URLs. Returns {url, path, content_type}.",
       { url: z.string(), dest_dir: z.string().optional(), filename: z.string().optional() },
       (args: { url: string; dest_dir?: string; filename?: string }) =>
         cli("download-url", [
@@ -23,7 +23,7 @@ export function createApiTools(cli: CliRunner) {
         ]),
     ),
     "download-pmc-tar": createCliTool(
-      "Download and extract a PMC tar archive by PMC ID. When to use: first-choice PMC retrieval before download-pmc-oa. Returns {artifact_root, source_dir, files}.",
+      "Download and extract a PMC tar archive by PMC ID. When to use: first-choice PMC retrieval before download-pmc-oa. Returns {pmcid, artifact_root, source_dir, files, source_url, paper_url}. Quote paper_url verbatim in any failure report — do not construct your own.",
       { pmc_id: z.number().int(), dest_dir: z.string().optional() },
       (args: { pmc_id: number; dest_dir?: string }) =>
         cli("download-pmc-tar", [String(args.pmc_id), ...(args.dest_dir ? [args.dest_dir] : [])]),
@@ -40,7 +40,7 @@ export function createApiTools(cli: CliRunner) {
       (args: { organism_name: string }) => cli("resolve-taxon-id", [args.organism_name]),
     ),
     "download-pmc-oa": createCliTool(
-      "Download all PMC OA files (XML, PDF, supplements, media) from S3 by PMC ID. When to use: fallback when download-pmc-tar fails (404/400/conn) and the article is in OA. Returns {source_dir, version, files}.",
+      "Download all PMC OA files (XML, PDF, supplements, media) from S3 by PMC ID. When to use: fallback when download-pmc-tar fails (404/400/conn) and the article is in OA. Returns {pmcid, version, prefix, source_dir, files, available_versions, s3_uri, s3_https_uri, paper_url}. Quote s3_uri/s3_https_uri/paper_url verbatim in any failure report or ledger entry — do not construct your own URL by analogy.",
       { pmc_id: z.number().int(), dest_dir: z.string().optional(), version: z.number().int().optional() },
       (args: { pmc_id: number; dest_dir?: string; version?: number }) =>
         cli("download-pmc-oa", [

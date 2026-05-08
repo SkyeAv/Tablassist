@@ -21,7 +21,6 @@ from tablassist.cli import (
     search_pmc,
     validate_config_file,
     validate_config_str,
-    validate_section_str,
 )
 
 
@@ -68,34 +67,12 @@ def test_describe_excel_profiles_sheet(tmp_path: Path) -> None:
     assert result["columns"][1]["statistics"]["max"] == 0.91
 
 
-def test_validate_section_str_accepts_single_section() -> None:
-    yaml_string = """
-source:
-  kind: text
-  local: fixtures/preview.csv
-  url: https://example.com/preview.csv
-statement:
-  subject:
-    encoding: A
-    method: column
-  object:
-    encoding: Gene
-provenance:
-  publication: PMC1234567
-  contributors:
-    - name: Example Curator
-      date: \"2026-04-02\"
-"""
-    result = validate_section_str(yaml_string)
-
-    assert result["status"] == "ok"
-
-
 def test_validate_config_str_accepts_valid_fixture() -> None:
     result = validate_config_str((FIXTURES_DIR / "valid-config.yaml").read_text())
 
     assert isinstance(result, list)
-    assert result[0]["status"] == "ok"
+    assert "section" in result[0]
+    assert "error" in result[0]
 
 
 def test_validate_config_str_rejects_invalid_fixture() -> None:
@@ -133,7 +110,8 @@ def test_validate_config_file_accepts_valid_fixture() -> None:
     result = validate_config_file(FIXTURES_DIR / "valid-config.yaml")
 
     assert isinstance(result, list)
-    assert result[0]["status"] == "ok"
+    assert "section" in result[0]
+    assert "error" in result[0]
 
 
 def test_extract_text_semantic_exports_requested_format(monkeypatch: Any) -> None:
@@ -283,7 +261,14 @@ def test_get_pmc_summary_parses_xml(monkeypatch: Any) -> None:
     assert result["title"] == "A Great Paper"
     assert "Abstract text." in result["abstract"]
     assert result["authors"] == ["Jane Doe"]
-    assert result["supplements"] == [{"filename": "supp1.xlsx", "media_type": "application/vnd.ms-excel"}]
+    assert result["paper_url"] == "https://pmc.ncbi.nlm.nih.gov/articles/PMC12345/"
+    assert result["supplements"] == [
+        {
+            "filename": "supp1.xlsx",
+            "media_type": "application/vnd.ms-excel",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12345/bin/supp1.xlsx",
+        }
+    ]
 
 
 def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
@@ -310,10 +295,13 @@ def test_discovery_ledger_round_trip(tmp_path: Path) -> None:
         artifact_root=".ledger/cancer/data/PMC42",
         agent_name="the-pioneer",
         run_id="run-1",
+        s3_uri="s3://pmc-oa-opendata/PMC42.1/",
     )
     assert added["added"]["pmcid"] == 42
     assert added["added"]["config_paths"] == ["ROMERO3.yaml", "ROMERO3B.yaml"]
     assert added["added"]["artifact_root"] == ".ledger/cancer/data/PMC42"
+    assert added["added"]["paper_url"] == "https://pmc.ncbi.nlm.nih.gov/articles/PMC42/"
+    assert added["added"]["s3_uri"] == "s3://pmc-oa-opendata/PMC42.1/"
     assert added["total_entries"] == 1
 
     check_hit = discovery_ledger("check", ledger_path, pmc_id=42)

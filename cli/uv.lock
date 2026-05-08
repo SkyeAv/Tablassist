@@ -2896,7 +2896,7 @@ wheels = [
 
 [[package]]
 name = "tablassert"
-version = "7.4.0"
+version = "7.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cyclopts", marker = "sys_platform != 'win32'" },
@@ -2921,9 +2921,9 @@ dependencies = [
     { name = "sqlite-utils", marker = "sys_platform != 'win32'" },
     { name = "xxhash", marker = "sys_platform != 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/af/7d14d1ab75c5dffc717a2b71ea9ee78076826daec8c29c3b01aff0dd992a/tablassert-7.4.0.tar.gz", hash = "sha256:0a9e15424057586b369508c1fd679b2e420d354fb1b3a0c8ce92f6c3794a8d37", size = 236051, upload-time = "2026-05-06T01:53:24.963Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/e9/514807b91df62039d66725937968ff2c7f96a23bc32c74556d6c37d29889/tablassert-7.4.2.tar.gz", hash = "sha256:75c5d3a006ed13bf99dd0923c5dbab1cc9a6e91d2c71f509d81bf476f80e6d42", size = 237248, upload-time = "2026-05-08T03:32:55.593Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/cc/1065eabc7d4e8b079ff1bc84ff54e0649c13b44a696d3cae1a18080f146d/tablassert-7.4.0-py3-none-any.whl", hash = "sha256:26b4dba7d75b9c66871466c19e8ade32586925c590445915b190a48225c63a90", size = 37104, upload-time = "2026-05-06T01:53:23.576Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/38/dff4629db5a1d12e736a5957db68c6d060bab7adf1c936f7c33efb584710/tablassert-7.4.2-py3-none-any.whl", hash = "sha256:e4459f93ccdefb79effeb0cc3b1e19fddc5c47011837c69f8e13321d321f16c2", size = 38017, upload-time = "2026-05-08T03:32:53.826Z" },
 ]
 
 [package.optional-dependencies]
@@ -2933,7 +2933,7 @@ rt = [
 
 [[package]]
 name = "tablassist"
-version = "0.4.0"
+version = "0.4.2"
 source = { editable = "." }
 dependencies = [
     { name = "cyclopts", marker = "sys_platform != 'win32'" },
@@ -2974,11 +2974,11 @@ requires-dist = [
     { name = "lazy-loader", specifier = ">=0.5" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "polars", specifier = ">=1.39.3" },
-    { name = "polars", extras = ["rtcompat"], marker = "extra == 'rt'", specifier = ">=1.39.0" },
+    { name = "polars", extras = ["rtcompat"], marker = "extra == 'rt'", specifier = ">=1.39.3" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "tablassert", specifier = ">=7.4.0" },
-    { name = "tablassert", extras = ["rt"], marker = "extra == 'rt'", specifier = ">=7.4.0" },
+    { name = "tablassert", specifier = ">=7.4.2" },
+    { name = "tablassert", extras = ["rt"], marker = "extra == 'rt'", specifier = ">=7.4.2" },
     { name = "textract-py3", specifier = ">=3.0.0" },
     { name = "trafilatura", specifier = ">=2.0.0" },
     { name = "xlsx2csv", specifier = ">=0.8.6" },

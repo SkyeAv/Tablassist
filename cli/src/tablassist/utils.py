@@ -33,6 +33,19 @@ PMC_ESUMMARY_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.
 PMC_EFETCH_URL: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
 XLINK_HREF: str = "{http://www.w3.org/1999/xlink}href"
+
+PMC_ARTICLE_URL_TEMPLATE: str = "https://pmc.ncbi.nlm.nih.gov/articles/PMC{pmc_id}/"
+PMC_SUPPLEMENT_URL_TEMPLATE: str = "https://pmc.ncbi.nlm.nih.gov/articles/PMC{pmc_id}/bin/{filename}"
+
+
+def pmc_paper_url(pmc_id: int) -> str:
+    return PMC_ARTICLE_URL_TEMPLATE.format(pmc_id=int(pmc_id))
+
+
+def pmc_supplement_url(pmc_id: int, filename: str) -> str:
+    return PMC_SUPPLEMENT_URL_TEMPLATE.format(pmc_id=int(pmc_id), filename=filename)
+
+
 LEDGER_VERSION: int = 2
 CLAIM_LEASE_SECONDS_DEFAULT: int = 1800
 LEDGER_LOCK_TIMEOUT_SECONDS: float = 10.0
@@ -64,18 +77,20 @@ def get_xml_response(url: str, params: Optional[dict[str, Any]] = None) -> ET.El
     return ET.fromstring(text)
 
 
-def parse_pmc_supplements(xml_root: ET.Element) -> list[dict[str, str]]:
+def parse_pmc_supplements(pmc_id: int, xml_root: ET.Element) -> list[dict[str, str]]:
     supplements: list[dict[str, str]] = []
     for sup in xml_root.iter("supplementary-material"):
         for media in sup.iter("media"):
             href: str = media.get(XLINK_HREF) or media.get("href") or ""
             media_type: str = media.get("mimetype") or media.get("mime-subtype") or ""
             if href:
-                supplements.append({"filename": href, "media_type": media_type})
+                supplements.append(
+                    {"filename": href, "media_type": media_type, "url": pmc_supplement_url(pmc_id, href)}
+                )
         for inline in sup.iter("inline-supplementary-material"):
             href = inline.get(XLINK_HREF) or inline.get("href") or ""
             if href:
-                supplements.append({"filename": href, "media_type": ""})
+                supplements.append({"filename": href, "media_type": "", "url": pmc_supplement_url(pmc_id, href)})
     return supplements
 
 
@@ -87,6 +102,7 @@ def parse_pmc_paper_summary(pmc_id: str, item: dict[str, Any]) -> dict[str, Any]
         "title": item.get("title", ""),
         "authors": authors,
         "date": item.get("pubdate", ""),
+        "paper_url": pmc_paper_url(int(pmc_id)),
         "has_suppl_data": False,
     }
 
@@ -113,7 +129,8 @@ def parse_pmc_article_xml(pmc_id: int, root: ET.Element) -> dict[str, Any]:
         "title": "".join(title_el.itertext()).strip() if title_el is not None else "",
         "abstract": "".join(abstract_el.itertext()).strip() if abstract_el is not None else "",
         "authors": authors,
-        "supplements": parse_pmc_supplements(root),
+        "paper_url": pmc_paper_url(pmc_id),
+        "supplements": parse_pmc_supplements(pmc_id, root),
     }
 
 
@@ -182,6 +199,10 @@ def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str,
         }
         if isinstance(raw_entry.get("artifact_root"), str):
             entry["artifact_root"] = raw_entry["artifact_root"]
+        if isinstance(raw_entry.get("paper_url"), str):
+            entry["paper_url"] = raw_entry["paper_url"]
+        if isinstance(raw_entry.get("s3_uri"), str):
+            entry["s3_uri"] = raw_entry["s3_uri"]
         if isinstance(raw_entry.get("completed_at"), str):
             entry["completed_at"] = raw_entry["completed_at"]
         elif entry["status"] not in {"claimed", "in-progress"}:
@@ -357,6 +378,8 @@ def ledger_add(
     artifact_root: Optional[str],
     agent_name: Optional[str],
     run_id: Optional[str],
+    paper_url: Optional[str] = None,
+    s3_uri: Optional[str] = None,
 ) -> dict[str, Any]:
     def _add(ledger: dict[str, Any]) -> dict[str, Any]:
         now = _utc_now_iso()
@@ -374,6 +397,12 @@ def ledger_add(
         entry["updated_at"] = now
         if artifact_root:
             entry["artifact_root"] = artifact_root
+        if paper_url:
+            entry["paper_url"] = paper_url
+        elif "paper_url" not in entry:
+            entry["paper_url"] = pmc_paper_url(int(pmc_id))
+        if s3_uri:
+            entry["s3_uri"] = s3_uri
         if status not in {"claimed", "in-progress"}:
             entry["completed_at"] = now
 

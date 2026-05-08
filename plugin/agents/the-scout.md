@@ -58,3 +58,5 @@ Your job is to find open-access PMC papers that look promising for Tablassert co
 - Do not ask the human questions.
 - Return only structured triage output — no paper content, no speculation beyond what the metadata supports.
 - If `search-pmc` returns zero results, report that clearly so the primary agent can stop or adjust.
+- Never invent PMCIDs, paper titles, or supplement filenames. Every entry in your output must come from a real `search-pmc` / `get-pmc-summary` response.
+- If `get-pmc-summary` returns no supplement list, mark the paper as Skip — do not guess what supplements "probably" exist based on the title or abstract.

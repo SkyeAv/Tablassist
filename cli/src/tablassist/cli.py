@@ -28,6 +28,7 @@ from tablassist.utils import (
     parse_pmc_article_xml,
     parse_pmc_paper_summary,
     parse_yaml_string,
+    pmc_paper_url,
     validate_config_root,
     validate_section,
     with_ncbi_api_key,
@@ -221,6 +222,8 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
         "archive_path": archive_path,
         "source_dir": str(paths["source_dir"]),
         "files": files,
+        "source_url": url,
+        "paper_url": pmc_paper_url(pmc_id),
         "cleanup": {"removed": [archive_path]},
     }
 
@@ -544,6 +547,9 @@ def download_pmc_oa(pmc_id: int, dest_dir: Path = Path("."), version: Optional[i
         "source_dir": str(target_dir),
         "files": files,
         "available_versions": available,
+        "s3_uri": f"s3://{PMC_OA_BUCKET}/{chosen_prefix}/",
+        "s3_https_uri": f"https://{PMC_OA_BUCKET}.s3.amazonaws.com/{chosen_prefix}/",
+        "paper_url": pmc_paper_url(pmc_id),
     }
 
 
@@ -639,6 +645,8 @@ def discovery_ledger(
     agent_name: Optional[str] = None,
     run_id: Optional[str] = None,
     lease_seconds: int = 1800,
+    paper_url: Optional[str] = None,
+    s3_uri: Optional[str] = None,
 ) -> dict[str, Any]:
     """Manage the discovery progress ledger (read/add/check entries)."""
     ledger = load_ledger(ledger_path, topic)
@@ -677,6 +685,8 @@ def discovery_ledger(
             artifact_root,
             agent_name,
             run_id,
+            paper_url=paper_url,
+            s3_uri=s3_uri,
         )
 
 
