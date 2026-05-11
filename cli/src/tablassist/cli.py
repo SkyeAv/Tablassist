@@ -57,17 +57,17 @@ else:
 CLI: App = App()
 
 
-def _json_safe(value: Any) -> Any:
+def json_safe(value: Any) -> Any:
     if isinstance(value, (datetime, date, time)):
         return value.isoformat()
     if isinstance(value, list):
-        return [_json_safe(item) for item in value]
+        return [json_safe(item) for item in value]
     if isinstance(value, dict):
-        return {key: _json_safe(item) for key, item in value.items()}
+        return {key: json_safe(item) for key, item in value.items()}
     return value
 
 
-def _column_summary(series: pl.Series) -> dict[str, Any]:
+def column_summary(series: pl.Series) -> dict[str, Any]:
     dtype = series.dtype
     non_null = series.drop_nulls()
 
@@ -77,14 +77,14 @@ def _column_summary(series: pl.Series) -> dict[str, Any]:
         "null_count": series.null_count(),
         "non_null_count": non_null.len(),
         "unique_count": series.n_unique(),
-        "sample_values": _json_safe(non_null.unique(maintain_order=True).head(5).to_list()),
+        "sample_values": json_safe(non_null.unique(maintain_order=True).head(5).to_list()),
     }
 
     if non_null.is_empty():
         return summary
 
     if dtype.is_numeric():
-        summary["statistics"] = _json_safe(
+        summary["statistics"] = json_safe(
             {
                 "min": non_null.min(),
                 "max": non_null.max(),
@@ -111,17 +111,17 @@ def _column_summary(series: pl.Series) -> dict[str, Any]:
         return summary
 
     if dtype.is_temporal():
-        summary["statistics"] = _json_safe({"min": non_null.min(), "max": non_null.max()})
+        summary["statistics"] = json_safe({"min": non_null.min(), "max": non_null.max()})
 
     return summary
 
 
-def _explore_dataframe(df: pl.DataFrame) -> dict[str, Any]:
+def explore_dataframe(df: pl.DataFrame) -> dict[str, Any]:
     return {
         "shape": {"rows": df.height, "columns": df.width},
         "schema": {name: str(dtype) for name, dtype in df.schema.items()},
-        "sample_rows": _json_safe(df.head(5).to_dicts()),
-        "columns": [_column_summary(df.get_column(name)) for name in df.columns],
+        "sample_rows": json_safe(df.head(5).to_dicts()),
+        "columns": [column_summary(df.get_column(name)) for name in df.columns],
     }
 
 
@@ -136,7 +136,7 @@ TABLASSIST_USERNAME: str = os.environ.get("TABLASSIST_USERNAME", "")
 TABLASSIST_API_KEY: str = os.environ.get("TABLASSIST_API_KEY", "")
 
 
-def _artifact_dirs(dest_dir: Path) -> dict[str, Path]:
+def artifact_dirs(dest_dir: Path) -> dict[str, Path]:
     artifact_root = dest_dir
     raw_dir = artifact_root / "raw"
     source_dir = artifact_root / "source"
@@ -153,7 +153,7 @@ def _artifact_dirs(dest_dir: Path) -> dict[str, Path]:
     }
 
 
-def _filename_from_headers(url: str, headers: httpx.Headers, fallback: str) -> str:
+def filename_from_headers(url: str, headers: httpx.Headers, fallback: str) -> str:
     disposition: str = headers.get("content-disposition", "")
     matches = re.search(r'filename="?([^";]+)"?', disposition)
     if matches:
@@ -171,7 +171,7 @@ def _filename_from_headers(url: str, headers: httpx.Headers, fallback: str) -> s
     return fallback
 
 
-def _safe_extract_tar(archive_path: Path, dest_dir: Path) -> None:
+def safe_extract_tar(archive_path: Path, dest_dir: Path) -> None:
     dest_root = dest_dir.resolve()
     with tarfile.open(archive_path) as archive:
         for member in archive.getmembers():
@@ -194,7 +194,7 @@ def search_curies(term: str) -> Union[list[Any], dict[str, Any]]:
 def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
     """Download and extract a PMC tar archive by PMC ID."""
     url: str = "https://hypatia.systemsbiology.net/configurator-api/download-from-pmc-tars"
-    paths = _artifact_dirs(dest_dir)
+    paths = artifact_dirs(dest_dir)
 
     params: dict[str, Any] = {"username": TABLASSIST_USERNAME, "api-key": TABLASSIST_API_KEY, "pmc-id": pmc_id}
 
@@ -204,40 +204,40 @@ def download_pmc_tar(pmc_id: int, dest_dir: Path = Path(".")) -> dict[str, Any]:
             error: dict[str, Any] = r.json()
             return error
 
-        filename = _filename_from_headers(url, r.headers, "download.tar.xz")
+        filename = filename_from_headers(url, r.headers, "download.tar.xz")
         p: Path = paths["raw_dir"] / Path(filename).name
         with p.open("wb") as f:
             for chunk in r.iter_bytes():
                 f.write(chunk)
 
-    _safe_extract_tar(p, paths["source_dir"])
+    safe_extract_tar(p, paths["source_dir"])
 
     files: list[str] = sorted(
         str(path.relative_to(paths["source_dir"])) for path in paths["source_dir"].rglob("*") if path.is_file()
     )
-    archive_path = str(p)
+    archived = str(p)
     p.unlink()
 
     return {
         "status": "ok",
         "pmcid": pmc_id,
         "artifact_root": str(paths["artifact_root"]),
-        "archive_path": archive_path,
+        "archive_path": archived,
         "source_dir": str(paths["source_dir"]),
         "files": files,
         "source_url": url,
         "paper_url": pmc_paper_url(pmc_id),
-        "cleanup": {"removed": [archive_path]},
+        "cleanup": {"removed": [archived]},
     }
 
 
 @CLI.command
 def download_url(url: str, dest_dir: Path = Path("."), filename: Optional[str] = None) -> dict[str, Any]:
     """Download a URL into a deterministic artifact directory."""
-    paths = _artifact_dirs(dest_dir)
+    paths = artifact_dirs(dest_dir)
     with httpx.stream("GET", url, follow_redirects=True, timeout=TIMEOUT) as response:
         response.raise_for_status()
-        resolved_name = filename or _filename_from_headers(url, response.headers, "download")
+        resolved_name = filename or filename_from_headers(url, response.headers, "download")
         target = paths["raw_dir"] / resolved_name
         with target.open("wb") as f:
             for chunk in response.iter_bytes():
@@ -426,7 +426,7 @@ def describe_excel(
 ) -> dict[str, Any]:
     """Inspect an Excel sheet with schema, sample rows, and per-column profiles."""
     df: pl.DataFrame = pl.read_excel(source=file, sheet_name=sheet_name, engine=engine, infer_schema_length=None)
-    summary = _explore_dataframe(df)
+    summary = explore_dataframe(df)
     summary["sheet_name"] = sheet_name
     return summary
 
@@ -435,7 +435,7 @@ def describe_excel(
 def describe_csv(file: Path, separator: str = ",") -> dict[str, Any]:
     """Inspect a CSV/tabular file with schema, sample rows, and per-column profiles."""
     df: pl.DataFrame = pl.read_csv(source=file, separator=separator, infer_schema_length=None)
-    summary = _explore_dataframe(df)
+    summary = explore_dataframe(df)
     summary["separator"] = separator
     return summary
 
@@ -511,7 +511,7 @@ def download_pmc_oa(pmc_id: int, dest_dir: Path = Path("."), version: Optional[i
     chosen_version: int = chosen[0]
     chosen_prefix: str = chosen[1]
 
-    paths = _artifact_dirs(dest_dir)
+    paths = artifact_dirs(dest_dir)
     target_dir: Path = paths["source_dir"] / chosen_prefix
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -597,7 +597,7 @@ def iter_source_blocks(raw: Any) -> list[dict[str, Any]]:
     return blocks
 
 
-def _get_ncbi_result_error(payload: dict[str, Any]) -> Optional[str]:
+def get_ncbi_result_error(payload: dict[str, Any]) -> Optional[str]:
     if error := payload.get("error") or payload.get("ERROR"):
         return str(error)
 
@@ -630,7 +630,7 @@ def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, An
         return {"error": "PMC search returned a non-object response"}
 
     result: dict[str, Any] = esearch.get("esearchresult", {}) if isinstance(esearch.get("esearchresult"), dict) else {}
-    if error := _get_ncbi_result_error(result):
+    if error := get_ncbi_result_error(result):
         return {"error": f"PMC search failed: {error}"}
 
     id_list: list[str] = result.get("idlist", []) or []
@@ -648,7 +648,7 @@ def search_pmc(query: str, max_results: int = 10, page: int = 0) -> dict[str, An
             return {"error": "PMC summary lookup returned a non-object response"}
 
         summaries: dict[str, Any] = esummary.get("result", {}) if isinstance(esummary.get("result"), dict) else {}
-        if error := _get_ncbi_result_error(summaries):
+        if error := get_ncbi_result_error(summaries):
             return {"error": f"PMC summary lookup failed: {error}"}
 
         for pmc_id in id_list:
@@ -691,7 +691,7 @@ def consolidate_datalake(
             return {"error": f"YAML file not found: {yaml_file}"}
 
         raw: Any = parse_yaml_string(yaml_file.read_text())
-        if isinstance(raw, dict) and set(raw.keys()) == {"error"}:
+        if isinstance(raw, dict) and list(raw.keys()) == ["error"]:
             return {"error": f"Failed to parse {yaml_file}: {raw['error']}"}
 
         replacements: dict[str, str] = {}
@@ -814,7 +814,11 @@ def discovery_ledger(
     if action == "add":
         if pmc_id is None or status is None:
             return {"error": "add requires pmc_id and status"}
-        normalized_config_paths: list[str] = config_paths or ([config_path] if config_path else [])
+        normalized_config_paths: list[str] = []
+        if config_paths:
+            normalized_config_paths = config_paths
+        elif config_path:
+            normalized_config_paths = [config_path]
         parsed_manifest: Optional[list[dict[str, str]]] = None
         if datalake_manifest is not None:
             try:

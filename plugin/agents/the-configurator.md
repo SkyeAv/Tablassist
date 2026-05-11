@@ -67,6 +67,9 @@ Refuse the request and explain to the human — do NOT push forward by inventing
 
 A refusal is a successful outcome. Forcing a config when the source does not support one is a failure.
 
+## Script Execution
+- Prefer `uv run` over `python` for executing Python scripts.
+
 ## Constraints & Rules
 - Never finalize a scientifically uncertain mapping without surfacing the uncertainty to the human.
 - Never ask subagents to talk to the human.

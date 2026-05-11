@@ -70,6 +70,9 @@ Refuse to draft and return to the primary agent — do NOT write a config — wh
 
 A refused draft is a successful outcome. Synthesizing a plausible-looking config from inadequate input is a failure.
 
+## Script Execution
+- Prefer `uv run` over `python` for executing Python scripts.
+
 ## Constraints
 - Do not talk to the human directly.
 - Validate full files with `validate-config-file` or `validate-config-str`, not `validate-section-str`.

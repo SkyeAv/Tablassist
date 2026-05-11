@@ -134,27 +134,27 @@ def parse_pmc_article_xml(pmc_id: int, root: ET.Element) -> dict[str, Any]:
     }
 
 
-def _utc_now() -> dt.datetime:
+def utc_now() -> dt.datetime:
     return dt.datetime.now(dt.timezone.utc)
 
 
-def _utc_now_iso() -> str:
-    return _utc_now().isoformat()
+def utc_now_iso() -> str:
+    return utc_now().isoformat()
 
 
-def _default_ledger(topic: Optional[str]) -> dict[str, Any]:
-    now: str = _utc_now_iso()
+def default_ledger(topic: Optional[str]) -> dict[str, Any]:
+    now: str = utc_now_iso()
     return {"version": LEDGER_VERSION, "topic": topic or "", "entries": [], "claims": {}, "updated_at": now}
 
 
-def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str, Any]:
-    normalized: dict[str, Any] = _default_ledger(topic)
+def normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str, Any]:
+    normalized: dict[str, Any] = default_ledger(topic)
     normalized["topic"] = str(ledger.get("topic") or topic or "")
 
     raw_claims = ledger.get("claims")
     claims: dict[str, Any] = raw_claims if isinstance(raw_claims, dict) else {}
     active_claims: dict[str, Any] = {}
-    now = _utc_now()
+    now = utc_now()
     for key, claim in claims.items():
         if not isinstance(claim, dict):
             continue
@@ -181,7 +181,7 @@ def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str,
 
         timestamp = raw_entry.get("timestamp") if isinstance(raw_entry.get("timestamp"), str) else None
         created_at = (
-            raw_entry.get("created_at") if isinstance(raw_entry.get("created_at"), str) else timestamp or _utc_now_iso()
+            raw_entry.get("created_at") if isinstance(raw_entry.get("created_at"), str) else timestamp or utc_now_iso()
         )
         updated_at = raw_entry.get("updated_at") if isinstance(raw_entry.get("updated_at"), str) else created_at
         config_paths = raw_entry.get("config_paths")
@@ -235,28 +235,28 @@ def _normalize_ledger(ledger: dict[str, Any], topic: Optional[str]) -> dict[str,
 
     normalized["entries"] = sorted(entries_by_pmcid.values(), key=lambda item: int(item["pmcid"]))
     normalized["claims"] = active_claims
-    normalized["updated_at"] = str(ledger.get("updated_at") or _utc_now_iso())
+    normalized["updated_at"] = str(ledger.get("updated_at") or utc_now_iso())
     return normalized
 
 
 def load_ledger(ledger_path: Path, topic: Optional[str]) -> Union[dict[str, Any], None]:
     if not ledger_path.exists():
-        return _default_ledger(topic)
+        return default_ledger(topic)
     try:
         raw = json.loads(ledger_path.read_text())
     except json.JSONDecodeError as e:
         return {"error": f"Ledger JSON parse error: {e}"}
     if not isinstance(raw, dict):
         return {"error": "Ledger JSON must be an object"}
-    return _normalize_ledger(raw, topic)
+    return normalize_ledger(raw, topic)
 
 
-def _lock_path_for_ledger(ledger_path: Path) -> Path:
+def lock_path_for_ledger(ledger_path: Path) -> Path:
     return ledger_path.with_suffix(f"{ledger_path.suffix}.lock")
 
 
-def _acquire_ledger_lock(ledger_path: Path) -> Path:
-    lock_path = _lock_path_for_ledger(ledger_path)
+def acquire_ledger_lock(ledger_path: Path) -> Path:
+    lock_path = lock_path_for_ledger(ledger_path)
     deadline = time.monotonic() + LEDGER_LOCK_TIMEOUT_SECONDS
     while True:
         try:
@@ -280,14 +280,14 @@ def _acquire_ledger_lock(ledger_path: Path) -> Path:
             time.sleep(0.05)
 
 
-def _release_ledger_lock(lock_path: Path) -> None:
+def release_ledger_lock(lock_path: Path) -> None:
     try:
         lock_path.unlink()
     except FileNotFoundError:
         pass
 
 
-def _write_ledger_unlocked(ledger_path: Path, ledger: dict[str, Any]) -> None:
+def write_ledger_unlocked(ledger_path: Path, ledger: dict[str, Any]) -> None:
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         "w", dir=ledger_path.parent, prefix=f".{ledger_path.name}.", suffix=".tmp", delete=False
@@ -299,26 +299,26 @@ def _write_ledger_unlocked(ledger_path: Path, ledger: dict[str, Any]) -> None:
 
 
 def write_ledger(ledger_path: Path, ledger: dict[str, Any]) -> None:
-    lock_path = _acquire_ledger_lock(ledger_path)
+    lock_path = acquire_ledger_lock(ledger_path)
     try:
-        _write_ledger_unlocked(ledger_path, _normalize_ledger(ledger, ledger.get("topic")))
+        write_ledger_unlocked(ledger_path, normalize_ledger(ledger, ledger.get("topic")))
     finally:
-        _release_ledger_lock(lock_path)
+        release_ledger_lock(lock_path)
 
 
 def update_ledger(ledger_path: Path, topic: Optional[str], update_fn: Any) -> dict[str, Any]:
-    lock_path = _acquire_ledger_lock(ledger_path)
+    lock_path = acquire_ledger_lock(ledger_path)
     try:
         ledger = load_ledger(ledger_path, topic)
         if ledger is None or "error" in ledger:
             return ledger or {"error": "Failed to load ledger"}
-        normalized = _normalize_ledger(ledger, topic)
+        normalized = normalize_ledger(ledger, topic)
         result: dict[str, Any] = update_fn(normalized)
-        normalized["updated_at"] = _utc_now_iso()
-        _write_ledger_unlocked(ledger_path, normalized)
+        normalized["updated_at"] = utc_now_iso()
+        write_ledger_unlocked(ledger_path, normalized)
         return result
     finally:
-        _release_ledger_lock(lock_path)
+        release_ledger_lock(lock_path)
 
 
 def ledger_check(ledger: dict[str, Any], pmc_id: int) -> dict[str, Any]:
@@ -338,35 +338,35 @@ def ledger_claim(
     run_id: Optional[str],
     lease_seconds: int,
 ) -> dict[str, Any]:
-    def _claim(ledger: dict[str, Any]) -> dict[str, Any]:
+    def claim(ledger: dict[str, Any]) -> dict[str, Any]:
         key = str(int(pmc_id))
         existing = ledger.get("claims", {}).get(key)
         if existing and existing.get("run_id") != run_id:
             return {"claimed": False, "claim": existing, "error": f"PMC{pmc_id} is already claimed"}
 
-        claimed_at = _utc_now_iso()
-        claim = {
+        claimed_at = utc_now_iso()
+        claim_obj = {
             "pmcid": int(pmc_id),
             "agent_name": agent_name or "",
             "run_id": run_id or "",
             "claimed_at": claimed_at,
-            "expires_at": (_utc_now() + dt.timedelta(seconds=lease_seconds)).isoformat(),
+            "expires_at": (utc_now() + dt.timedelta(seconds=lease_seconds)).isoformat(),
         }
-        ledger.setdefault("claims", {})[key] = claim
+        ledger.setdefault("claims", {})[key] = claim_obj
 
         for entry in ledger.get("entries", []):
             if int(entry.get("pmcid", -1)) == int(pmc_id):
-                entry["claim"] = claim
+                entry["claim"] = claim_obj
                 entry["updated_at"] = claimed_at
                 break
 
-        return {"claimed": True, "claim": claim}
+        return {"claimed": True, "claim": claim_obj}
 
-    return update_ledger(ledger_path, topic, _claim)
+    return update_ledger(ledger_path, topic, claim)
 
 
 def ledger_release(ledger_path: Path, topic: Optional[str], pmc_id: int, run_id: Optional[str]) -> dict[str, Any]:
-    def _release(ledger: dict[str, Any]) -> dict[str, Any]:
+    def release(ledger: dict[str, Any]) -> dict[str, Any]:
         key = str(int(pmc_id))
         existing = ledger.get("claims", {}).get(key)
         if existing is None:
@@ -378,11 +378,11 @@ def ledger_release(ledger_path: Path, topic: Optional[str], pmc_id: int, run_id:
         for entry in ledger.get("entries", []):
             if int(entry.get("pmcid", -1)) == int(pmc_id):
                 entry.pop("claim", None)
-                entry["updated_at"] = _utc_now_iso()
+                entry["updated_at"] = utc_now_iso()
                 break
         return {"released": True, "claim": existing}
 
-    return update_ledger(ledger_path, topic, _release)
+    return update_ledger(ledger_path, topic, release)
 
 
 def ledger_add(
@@ -399,8 +399,8 @@ def ledger_add(
     s3_uri: Optional[str] = None,
     datalake_manifest: Optional[list[dict[str, str]]] = None,
 ) -> dict[str, Any]:
-    def _add(ledger: dict[str, Any]) -> dict[str, Any]:
-        now = _utc_now_iso()
+    def add(ledger: dict[str, Any]) -> dict[str, Any]:
+        now = utc_now_iso()
         if topic and not ledger.get("topic"):
             ledger["topic"] = topic
 
@@ -444,7 +444,7 @@ def ledger_add(
         ledger["entries"] = sorted(ledger.get("entries", []), key=lambda item: int(item["pmcid"]))
         return {"added": entry, "total_entries": len(ledger["entries"])}
 
-    return update_ledger(ledger_path, topic, _add)
+    return update_ledger(ledger_path, topic, add)
 
 
 def get_html_as_markdown(url: str) -> str:

@@ -105,6 +105,9 @@ After acquiring a file and before any preview, verify it is a tabular format Tab
 - For documents where structure matters (headings, tables, OCR), use `extract-text-semantic`.
 - For fast unstructured extraction, use `extract-text`.
 
+## Script Execution
+- Prefer `uv run` over `python` for executing Python scripts.
+
 ## Output Requirements
 Return concise, structured summaries. Include only what was requested — do not pad with unrequested analysis.
 

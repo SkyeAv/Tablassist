@@ -35,6 +35,9 @@ Your job is to run a continuous loop: find papers on a topic, extract tabular su
 - `consolidate-datalake` — relocate files referenced by `source.local` into a flat `./DATALAKE/` next to the configs
 - `discovery-ledger` — read/add/check entries on the progress ledger
 
+## Script Execution
+- Prefer `uv run` over `python` for executing Python scripts.
+
 Heavy lifting happens in subagents (`the-scout`, `the-extractor`, `the-builder`). You never download data, preview files, or write YAML yourself.
 
 ## Context Hygiene
