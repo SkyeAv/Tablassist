@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+*.cachassert/
+*.logassert/
+*.storassert/
 
 # Virtual environments
 .venv

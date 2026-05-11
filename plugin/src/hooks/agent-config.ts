@@ -9,6 +9,7 @@ const AGENTS_DIR = join(import.meta.dir, "..", "..", "agents")
 interface AgentFrontmatter {
   description: string
   mode: "primary" | "subagent" | "all"
+  color?: string
   temperature?: number
   maxSteps?: number
   tools?: { [key: string]: boolean }
@@ -61,9 +62,12 @@ function parseFrontmatter(content: string): { frontmatter: AgentFrontmatter; bod
       const key = scalarMatch[1]
       const raw = scalarMatch[2]
       if (key !== undefined && raw !== undefined) {
-        const value = raw.trim()
+        let value = raw.trim()
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1)
+        }
         const num = Number(value)
-        frontmatter[key] = Number.isFinite(num) ? num : value
+        frontmatter[key] = Number.isFinite(num) && value !== "" ? num : value
       }
       continue
     }
@@ -115,6 +119,10 @@ async function loadAgentFiles(): Promise<Map<string, AgentConfig>> {
       description: frontmatter.description,
       mode: frontmatter.mode,
       prompt: body,
+    }
+
+    if (frontmatter.color !== undefined) {
+      agentConfig.color = frontmatter.color
     }
 
     if (frontmatter.temperature !== undefined) {
