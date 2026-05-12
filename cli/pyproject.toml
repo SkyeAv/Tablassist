@@ -1,6 +1,6 @@
 [project]
 name = "tablassist"
-version = "0.4.4"
+version = "0.4.5"
 description = "AI-assisted table configuration generation for Tablassert — entity resolution, YAML validation, and Biolink documentation lookup."
 authors = [
     { name = "Skye Lane Goetz", email = "sgoetz@isbscience.org" },
@@ -44,7 +44,7 @@ dependencies = [
     "polars>=1.39.3",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
-    "tablassert>=7.4.2",
+    "tablassert>=7.4.8",
     "textract-py3>=3.0.0",
     "trafilatura>=2.0.0",
     "xlsx2csv>=0.8.6",
@@ -70,7 +70,7 @@ tablassist = "tablassist.cli:serve"
 
 [project.optional-dependencies]
 rt = [
-    "tablassert[rt]>=7.4.2",
+    "tablassert[rt]>=7.4.8",
     "polars[rtcompat]>=1.39.3",
 ]
 
