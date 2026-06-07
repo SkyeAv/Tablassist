@@ -4,12 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/tablassist.svg)](https://pypi.org/project/tablassist/)
 [![License](https://img.shields.io/pypi/l/tablassist.svg)](https://github.com/SkyeAv/Tablassist/blob/master/LICENSE)
 
-Python CLI tool for AI-assisted [Tablassert](https://github.com/SkyeAv/Tablassert) table configuration generation — entity resolution, YAML validation, and Biolink documentation lookup.
-
-Tablassist ships with two document extraction modes:
-
-- `extract-text` for fast raw extraction via Textract
-- `extract-text-semantic` for richer Docling-backed semantic extraction with Markdown output and `ocr=auto` by default
+Python CLI for AI-assisted [Tablassert](https://github.com/SkyeAv/Tablassert) configuration generation — entity resolution, YAML validation, Biolink documentation, data profiling, document extraction, and PMC integration.
 
 ## Installation
 
@@ -17,111 +12,104 @@ Tablassist ships with two document extraction modes:
 pip install tablassist
 ```
 
-The base install now includes Docling, so `extract-text-semantic` works without a separate helper script or optional extra.
-
-An optional extra is available for CPU compatibility:
+For CPUs without required SIMD instructions:
 
 ```bash
-pip install "tablassist[rtcompat]"  # Polars build for CPUs without required instructions
+pip install "tablassist[rtcompat]"
 ```
 
 ### Requirements
 
 - Python >= 3.13
-- Environment variables `TABLASSIST_USERNAME` and `TABLASSIST_API_KEY` for API-accessing commands
+- `TABLASSIST_USERNAME` and `TABLASSIST_API_KEY` environment variables for API-accessing commands
+- `aws` CLI in PATH for `download-pmc-oa`
 
-## Usage
-
-```bash
-# Fetch table configuration documentation
-tablassist docs-table-config
-```
+## Commands
 
 ### Entity Resolution
 
 ```bash
-# Search for entity CURIEs by term
 tablassist search-curies "breast cancer"
-
-# Search gene CURIEs within an NCBI taxon
 tablassist search-gene-curies "BRCA1" --ncbi-taxon 9606
-
-# Resolve an NCBI Taxon ID from an organism name
 tablassist resolve-taxon-id "Homo sapiens"
 ```
 
 ### Biolink Reference
 
 ```bash
-# List all supported categories, predicates, or qualifiers
 tablassist list-categories
 tablassist list-predicates
 tablassist list-qualifiers
-
-# Fetch documentation for a specific Biolink element
 tablassist docs-category "Gene"
 tablassist docs-predicate "interacts_with"
 tablassist docs-qualifier "qualified_predicate"
 ```
 
-### YAML Validation
-
-Full config validation requires `template:` as the top-level key, with optional `sections:`. Use `validate-section-str` only for individual section mappings, not for whole config files.
+### Configuration Reference
 
 ```bash
-# Validate a full config file
-tablassist validate-config-file config.yaml
-
-# Validate a single section from a YAML string
-tablassist validate-section-str '<yaml>'
-
-# Validate a full config from a YAML string
-tablassist validate-config-str '<yaml>'
-
-# Get the Section JSON schema
+tablassist docs-table-config
 tablassist section-schema
 ```
 
-### Data Preview
+### YAML Validation
+
+Full config files use `template:` as the top-level key with optional `sections:`. Use `validate-section-str` only for individual section mappings.
 
 ```bash
-# List sheets in an Excel file
+tablassist validate-config-file config.yaml
+tablassist validate-config-str '<yaml>'
+tablassist validate-section-str '<yaml>'
+```
+
+### Data Profiling
+
+```bash
+tablassist describe-excel data.xlsx "Sheet1"
+tablassist describe-csv data.csv
 tablassist excel-sheets data.xlsx
-
-# Preview rows from an Excel sheet
 tablassist preview-excel data.xlsx "Sheet1" 10
+tablassist preview-csv data.csv 10 --separator ","
+```
 
-# Preview rows from a CSV file
-tablassist preview-csv data.csv 10
+`describe-*` provides schema, sample rows, per-column dtypes, null/unique counts, and statistics. Prefer for first-pass inspection. `preview-*` returns raw `{column: [values]}` dicts for narrow follow-up.
 
-# Extract text from a document (PDF, DOCX, etc.)
+### Document Extraction
+
+```bash
 tablassist extract-text document.pdf
-
-# Extract semantic Markdown from a document with Docling
 tablassist extract-text-semantic document.pdf
-
-# Extract plain text and explicitly disable OCR
 tablassist extract-text-semantic document.pdf text off
 ```
 
-`extract-text` is optimized for fast, low-overhead text grabs.
+| Command | Engine | Output | Best for |
+|---|---|---|---|
+| `extract-text` | Textract | Raw text | Fast bulk extraction where layout doesn't matter |
+| `extract-text-semantic` | Docling | Markdown or text | Preserving headings, tables, reading order |
 
-`extract-text-semantic` runs IBM Docling directly from the CLI module. It is the better choice when reading order, headings, lists, or table-aware Markdown matter more than raw speed.
+`extract-text-semantic` arguments: `file`, `output_format` (`markdown` \| `text`, default `markdown`), `ocr` (`auto` \| `off` \| `on`, default `auto`).
 
-Arguments for `extract-text-semantic`:
-
-- `file` — local document path
-- `output_format` — `markdown` (default) or `text`
-- `ocr` — `auto` (default), `off`, or `on`
-
-Use `ocr=auto` for the default balance. Use `ocr=on` for scans and image-heavy PDFs, and `ocr=off` when you know the source is born-digital and want the lightest path.
-
-### PMC Archive Download
+### PMC Integration
 
 ```bash
-# Download and extract a PMC tar archive
+tablassist search-pmc "drug repurposing" --max-results 10
+tablassist get-pmc-summary 12345
 tablassist download-pmc-tar 12345 --dest-dir ./output
+tablassist download-pmc-oa 12345 --dest-dir ./output
+tablassist download-url https://example.com/file.csv --dest-dir ./output
 ```
+
+PMC retrieval chain: prefer `download-pmc-tar`, then `download-pmc-oa`, then `download-url` as fallback.
+
+### Discovery Workflow
+
+```bash
+tablassist consolidate-datalake config1.yaml config2.yaml --pmc-id 12345 --artifact-root ./data
+tablassist discovery-ledger read --ledger-path .ledger/topic/ledger.json --topic "my topic"
+tablassist discovery-ledger add --ledger-path .ledger/topic/ledger.json --pmc-id 12345 --status done --topic "my topic"
+```
+
+`consolidate-datalake` moves files referenced by `source.local` into a flat `DATALAKE/` directory, rewrites paths, and re-validates configs. `discovery-ledger` manages cross-session progress tracking with actions: `read`, `add`, `check`, `claim`, `release`.
 
 ## Development
 

@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@skyeav/tablassist.svg)](https://www.npmjs.com/package/@skyeav/tablassist)
 [![License](https://img.shields.io/npm/l/@skyeav/tablassist.svg)](https://github.com/SkyeAv/Tablassist/blob/master/LICENSE)
 
-[OpenCode](https://opencode.ai) plugin for [Tablassert](https://github.com/SkyeAv/Tablassert) table configuration — entity resolution, YAML validation, and Biolink documentation tools.
+[OpenCode](https://opencode.ai) plugin for [Tablassert](https://github.com/SkyeAv/Tablassert) table configuration — entity resolution, YAML validation, Biolink documentation, data profiling, document extraction, and PMC discovery tools.
 
 ## Installation
 
@@ -11,91 +11,135 @@
 npm install @skyeav/tablassist
 ```
 
-Add the plugin to your OpenCode configuration. The plugin requires the Tablassist CLI to be installed and available on `PATH`:
+Requires the [Tablassist CLI](https://pypi.org/project/tablassist/) installed and on `PATH`:
 
 ```bash
 pip install tablassist
 ```
 
-Current Tablassist CLI releases include Docling in the base install, so the plugin can call `extract-text-semantic` without any separate semantic extraction helper.
+## Tools
 
-## What It Does
+The plugin exposes 26 CLI commands as OpenCode tools organized into five domains:
 
-This plugin gives AI agents access to the full Tablassist CLI toolset through OpenCode:
+### API (`tools/api.ts`)
 
-- **Entity Resolution** — Search and resolve biological CURIEs (genes, diseases, chemicals)
-- **YAML Validation** — Validate Tablassert table configurations with detailed error reporting
-- **Config Audit** — Run deep, report-first reviews of existing configs before semantic edits
-- **Biolink Documentation** — Look up categories, predicates, and qualifiers from the Biolink model
-- **Data Preview** — Inspect Excel and CSV files before building configurations
-- **Dual Text Extraction** — Use fast raw Textract extraction or richer semantic Docling extraction depending on the source
-- **Configuration Reference** — Access production examples and schema documentation
-
-Full config validation expects `template:` as the top-level YAML key, with optional `sections:`. The standalone `validate-section-str` tool is only for checking an individual merged section shape.
-
-Document extraction tools:
-
-- `extract-text` for fast raw text extraction from PDFs, DOCX, and similar files
-- `extract-text-semantic` for richer Markdown or plain-text extraction with `ocr=auto` by default
-
-The semantic extractor calls the CLI's built-in Docling path directly, so the plugin exposes the same semantic extraction endpoint that the CLI ships by default.
-
-## Architecture
-
-The plugin wraps the [Tablassist CLI](../cli/) and exposes its commands as OpenCode tools:
-
-```
-plugin/
-├── src/
-│   ├── index.ts          # Plugin entry point
-│   ├── cli.ts            # CLI runner and shell execution
-│   ├── cache.ts          # Resource caching system
-│   ├── hooks/            # System prompt and YAML validation hooks
-│   └── tools/            # Tool definitions (API, Biolink, files, schema)
-└── agents/               # Agent definitions (configurator, extractor, builder)
-```
-
-Three agents orchestrate the configuration workflow:
-
-| Agent | Role |
+| Tool | Description |
 |---|---|
-| `the-configurator` | Primary orchestrator for building table configs |
-| `the-extractor` | Subagent for data extraction and preview |
-| `the-builder` | Subagent for YAML construction and validation |
+| `search-curies` | Resolve any non-gene entity by free-text term |
+| `search-gene-curies` | Resolve gene CURIEs scoped to an NCBI taxon |
+| `resolve-taxon-id` | Look up NCBI Taxon ID from an organism name |
+| `download-pmc-tar` | Download and extract a PMC tar archive (first choice) |
+| `download-pmc-oa` | Download from PMC OA S3 bucket (fallback) |
+| `download-url` | Download an arbitrary URL into an artifact directory |
+
+### Biolink (`tools/biolink.ts`)
+
+| Tool | Description |
+|---|---|
+| `list-categories` | Enumerate all supported Biolink categories |
+| `list-predicates` | Enumerate all supported Biolink predicates |
+| `list-qualifiers` | Enumerate all supported Biolink qualifiers |
+| `docs-category` | Fetch documentation for a specific category |
+| `docs-predicate` | Fetch documentation for a specific predicate |
+| `docs-qualifier` | Fetch documentation for a specific qualifier |
+
+### Schema (`tools/schema.ts`)
+
+| Tool | Description |
+|---|---|
+| `section-schema` | Return the Section Pydantic model as JSON Schema |
+| `validate-config-str` | Validate a YAML config from a string |
+| `validate-config-file` | Validate a YAML config file on disk |
+
+### Files (`tools/files.ts`)
+
+| Tool | Description |
+|---|---|
+| `extract-text` | Fast raw text extraction via Textract |
+| `extract-text-semantic` | Structured Markdown extraction via Docling |
+| `excel-sheets` | List sheet names in an Excel file |
+| `preview-excel` | Preview first N rows of an Excel sheet |
+| `preview-csv` | Preview first N rows of a CSV/TSV |
+| `describe-excel` | Profile an Excel sheet with statistics |
+| `describe-csv` | Profile a CSV/TSV with statistics |
+
+### Discovery (`tools/discover.ts`)
+
+| Tool | Description |
+|---|---|
+| `search-pmc` | Search PubMed Central for open-access articles |
+| `get-pmc-summary` | Fetch metadata and supplements for a PMC article |
+| `discovery-ledger` | Manage cross-session discovery progress ledger |
+| `consolidate-datalake` | Move referenced files into a flat DATALAKE directory |
+
+## Agents
+
+Five agents orchestrate the configuration workflow:
+
+| Agent | Role | Receives system prompt resources |
+|---|---|---|
+| `the-configurator` | Primary orchestrator; validates configs, delegates to subagents | Yes |
+| `the-builder` | YAML construction and validation specialist | Yes |
+| `the-extractor` | Data extraction and preview subagent | No |
+| `the-pioneer` | Ledger-driven multi-paper discovery workflow | Yes |
+| `the-scout` | Lightweight search with minimal context | No |
 
 ## Slash Commands
 
-All commands are namespaced with the `tablassist:` prefix.
+All commands use the `tablassist:` prefix.
 
-- `/tablassist:audit <config-path>` performs a deep, report-first review: validates structure, fetches the PMC publication archive when available, uses semantic extraction for structured document review, consults schema and Biolink references, and recommends improvements without applying them until you approve.
-- `/tablassist:validate <config-path>` validates a config file and reports schema errors. If PMC-backed follow-up is needed, it should prefer `download-pmc-tar`, then `download-pmc-oa`, before any open-web fallback.
-- `/tablassist:preview <file-path>` previews rows from a CSV, TSV, or Excel file.
-- `/tablassist:search <term>` searches for CURIE candidates matching a term.
+- **`/tablassist:audit <config-path>`** — Deep report-first review: validates structure, downloads source data via the extractor fallback chain, inspects tabular data, spot-checks CURIE resolution and Biolink alignment, recommends improvements without applying them
+- **`/tablassist:validate <config-path>`** — Structural validation only; fixes schema errors, reports pass/fail
+- **`/tablassist:preview <file-path>`** — Profile and preview rows from a CSV, TSV, or Excel file
+- **`/tablassist:search <term>`** — Search for CURIE candidates matching a term
+- **`/tablassist:discover <topic>`** — Autonomous multi-paper discovery loop with ledger tracking
 
-PMC retrieval guidance for agents:
+## Architecture
 
-1. Prefer Tablassist-native tools and the `/tablassist:*` slash commands before open-web approaches.
-2. For PMC content, follow the three-step retrieval chain:
-   1. Try `download-pmc-tar` first.
-   2. If that fails, try `download-pmc-oa`.
-   3. Only if both steps above fail, fall back to deterministic URL retrieval (`download-url`, then `curl` or `webfetch` only when necessary) as a last resort.
-3. Keep all non-YAML artifacts under a deterministic paper-local root such as `.ledger/<sanitized-topic>/data/PMC<id>/`, with `raw/`, `source/`, `derived/`, and `scratch/` subdirectories as needed.
-4. Never use broad wildcard cleanup in the launch directory. Cleanup may remove only specific temporary files created for the current paper run.
-5. Do not retry guessed PMC, S3, or publisher links with `curl` or similar direct-download commands after a failed PMC archive download; those links often return HTML instead of the expected archive.
-
-Example:
-
-```bash
-/tablassist:audit ./configs/example.yaml
 ```
+plugin/
+├── agents/               # Agent persona definitions (Markdown)
+│   ├── the-builder.md
+│   ├── the-configurator.md
+│   ├── the-extractor.md
+│   ├── the-pioneer.md
+│   └── the-scout.md
+└── src/
+    ├── index.ts           # Plugin entry point
+    ├── cli.ts             # CLI runner (shell execution wrapper)
+    ├── cache.ts           # Parallel resource caching (schema, docs, examples)
+    ├── agent-tracker.ts   # Session → agent mapping with resource routing
+    ├── hooks/
+    │   ├── agent-config.ts       # Agent configuration hook
+    │   ├── command-config.ts     # Slash command registration
+    │   ├── system-prompt.ts      # Per-agent system prompt injection
+    │   ├── temperature.ts        # Model-specific temperature fallbacks
+    │   └── yaml-validation.ts    # Post-validation on generated YAML
+    └── tools/
+        ├── api.ts                # CURIE search, taxon, PMC download tools
+        ├── biolink.ts            # Biolink schema enumeration and docs
+        ├── schema.ts             # YAML validation tools
+        ├── files.ts              # Extraction and data preview tools
+        ├── discover.ts           # PMC search and discovery ledger tools
+        └── shared.ts             # Shared CLI tool factory
+```
+
+### PMC Retrieval Chain
+
+Agents follow a deterministic fallback for PMC content:
+
+1. `download-pmc-tar` (first choice)
+2. `download-pmc-oa` (fallback for OA articles)
+3. `download-url` / `webfetch` (last resort, only with URLs from real tool responses)
 
 ## Development
 
 ```bash
-bun install                          # install dependencies
-bun run ./src/index.ts               # run
-bun x tsc --noEmit                   # type check
-bun test                             # run all tests
+bun install              # install dependencies
+bun run lint             # lint with Biome
+bun run format           # format with Biome
+bun x tsc --noEmit       # type check
+bun test                 # run all tests
 ```
 
 ## License

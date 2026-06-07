@@ -5,17 +5,17 @@
 [![Python](https://img.shields.io/pypi/pyversions/tablassist.svg)](https://pypi.org/project/tablassist/)
 [![License](https://img.shields.io/pypi/l/tablassist.svg)](https://github.com/SkyeAv/Tablassist/blob/master/LICENSE)
 
-AI-assisted table configuration generation for [Tablassert](https://github.com/SkyeAv/Tablassert) — entity resolution, YAML validation, and Biolink documentation lookup.
+AI-assisted configuration generation for [Tablassert](https://github.com/SkyeAv/Tablassert) — entity resolution, YAML validation, Biolink documentation, and PMC literature discovery.
 
-Tablassist helps you create and validate Tablassert table configurations. Where Tablassert extracts knowledge assertions from tabular data into NCATS Translator-compliant KGX NDJSON, Tablassist provides the tooling to build those configurations correctly — with CURIE resolution, schema validation, and interactive documentation built in.
+Tablassert extracts knowledge assertions from tabular data into NCATS Translator-compliant KGX NDJSON. Tablassist provides the tooling to build those configurations correctly — with CURIE resolution, schema validation, document extraction, data profiling, and PMC integration built in.
 
 ## Components
 
-This is a polyglot monorepo with two distributable packages:
+Polyglot monorepo with two distributable packages:
 
 | Package | Description | Registry |
 |---|---|---|
-| [`cli/`](cli/) | Python CLI tool for configuration authoring and validation | [PyPI](https://pypi.org/project/tablassist/) |
+| [`cli/`](cli/) | Python CLI for configuration authoring and validation | [PyPI](https://pypi.org/project/tablassist/) |
 | [`plugin/`](plugin/) | OpenCode plugin exposing CLI tools to AI agents | [npm](https://www.npmjs.com/package/@skyeav/tablassist) |
 
 ## Quick Start
@@ -27,13 +27,8 @@ pip install tablassist
 ```
 
 ```bash
-# Validate a table configuration
 tablassist validate-config-file config.yaml
-
-# Search for entity CURIEs
 tablassist search-curies "breast cancer"
-
-# List supported Biolink categories
 tablassist list-categories
 ```
 
@@ -43,42 +38,39 @@ tablassist list-categories
 npm install @skyeav/tablassist
 ```
 
-Add to your OpenCode configuration to give AI agents access to Tablassert documentation, CURIE search, schema validation, and more.
+Add to your OpenCode configuration to give AI agents access to CURIE search, schema validation, Biolink docs, PMC discovery, and more.
 
-## Key Features
+## Features
 
-- **CURIE Resolution** — Search and resolve biological entity identifiers via the Configurator API
-- **YAML Validation** — Validate table configurations against the Tablassert schema with detailed error reporting
-- **Biolink Documentation** — Fetch documentation for categories, predicates, and qualifiers directly from Biolink
-- **Data Preview** — Inspect Excel and CSV files before building configurations
-- **Text Extraction** — Choose fast raw extraction or richer semantic Docling extraction for PDFs, DOCX, and other document formats
-- **Configuration Examples** — Access production YAML config examples and documentation
-
-Tablassist now exposes two complementary document extraction paths:
-
-- `extract-text` / `extract-text` tool for fast Textract-based raw text extraction
-- `extract-text-semantic` / `extract-text-semantic` tool for Docling-backed semantic extraction with Markdown output and `ocr=auto`
-
-Current CLI releases ship Docling in the default Python dependency set, and the OpenCode plugin forwards directly to that semantic extraction endpoint.
+- **Entity Resolution** — Search and resolve biological entity identifiers via the Configurator API (`search-curies`, `search-gene-curies`, `resolve-taxon-id`)
+- **Biolink Schema** — Enumerate and fetch documentation for categories, predicates, and qualifiers from the Biolink model
+- **YAML Validation** — Validate configurations against the Tablassert Pydantic schema with detailed per-section error reporting
+- **Data Profiling** — Inspect Excel and CSV files with schema inference, per-column statistics, and sample rows (`describe-excel`, `describe-csv`, `preview-excel`, `preview-csv`)
+- **Document Extraction** — Fast raw text via Textract (`extract-text`) or structured Markdown via Docling (`extract-text-semantic`) with OCR control
+- **PMC Integration** — Search PubMed Central, fetch article metadata, and download archives (`search-pmc`, `get-pmc-summary`, `download-pmc-tar`, `download-pmc-oa`)
+- **Discovery Workflow** — Ledger-driven multi-paper pipeline with concurrent claim coordination, DATALAKE consolidation, and cross-session state (`discovery-ledger`, `consolidate-datalake`)
 
 ## Development
 
-See [`cli/README.md`](cli/README.md) for Python CLI development and [`plugin/README.md`](plugin/README.md) for plugin development.
+See [`cli/README.md`](cli/README.md) and [`plugin/README.md`](plugin/README.md) for package-specific details.
 
 ```bash
 # CLI
 cd cli
 uv sync
-uv run ruff check .
+uv run ruff check . && uv run ruff format .
 uv run pyright
 uv run --group dev python -m pytest
 
 # Plugin
 cd plugin
 bun install
+bun run lint && bun run format
 bun x tsc --noEmit
 bun test
 ```
+
+Pre-commit hooks (via [`prek.toml`](prek.toml)) run all checks automatically on `git commit`.
 
 ## License
 
